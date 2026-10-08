@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Listas y matrices en Python nativo | Guía pedagógica</title>
+<style>
+:root{
+  --bg1:#f8fafc;--bg2:#e2e8f0;--card:#ffffff;--ink:#1e293b;--muted:#64748b;--line:#e2e8f0;
+  --blue:#3b82f6;--green:#10b981;--orange:#f59e0b;--purple:#8b5cf6;--red:#ef4444;
+  --t-blue:#eff6ff;--t-green:#ecfdf5;--t-orange:#fffbeb;--t-purple:#f5f3ff;--t-red:#fef2f2;
+  --code:#1e293b;--code-ink:#e2e8f0;--shadow:0 1px 3px rgba(15,23,42,.08),0 4px 14px rgba(15,23,42,.05);
+  --docente:#f0f9ff;--docente-b:#0ea5e9;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg1:#0f172a;--bg2:#111c33;--card:#172036;--ink:#e2e8f0;--muted:#94a3b8;--line:#26324a;
+  --t-blue:#172a4a;--t-green:#0f2f2a;--t-orange:#33280f;--t-purple:#261f45;--t-red:#3a1a1f;
+  --code:#0b1222;--code-ink:#e2e8f0;--shadow:0 1px 3px rgba(0,0,0,.4);--docente:#0c2534;
+}}
+:root[data-theme="dark"]{
+  --bg1:#0f172a;--bg2:#111c33;--card:#172036;--ink:#e2e8f0;--muted:#94a3b8;--line:#26324a;
+  --t-blue:#172a4a;--t-green:#0f2f2a;--t-orange:#33280f;--t-purple:#261f45;--t-red:#3a1a1f;
+  --code:#0b1222;--code-ink:#e2e8f0;--shadow:0 1px 3px rgba(0,0,0,.4);--docente:#0c2534;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px);scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;color:var(--ink);
+  background:linear-gradient(135deg,var(--bg1),var(--bg2)) fixed;background-color:var(--bg1);line-height:1.55;font-size:16px}
+code,pre,textarea{font-family:"Cascadia Code","JetBrains Mono",Consolas,"Fira Code",ui-monospace,monospace}
+p code,li code,td code,h3 code,.tile code,.alerta code,button code,small code{background:rgba(59,130,246,.12);color:inherit;padding:.05em .35em;border-radius:5px;font-size:.88em}
+a{color:var(--blue)}
+.c-blue{color:var(--blue)}.c-green{color:var(--green)}.c-orange{color:var(--orange)}.c-purple{color:var(--purple)}.c-red{color:var(--red)}
+.muted{color:var(--muted);font-size:.92rem}
+
+/* layout */
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:28px;max-width:1440px;margin:0 auto;padding:24px 24px 0}
+aside.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);align-self:start;max-height:calc(100vh - 32px);overflow:auto}
+main{min-width:0}
+@media (max-width:980px){.layout{grid-template-columns:minmax(0,1fr);padding:14px 14px 0}aside.side{position:static;max-height:none}}
+
+/* side */
+.side-box{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:16px;margin-bottom:14px;border:1px solid var(--line)}
+.side-box h4{margin:0 0 10px;font-size:.95rem;display:flex;gap:8px;align-items:center}
+.reloj{font-size:2rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.reloj small{font-size:.9rem;color:var(--muted);font-weight:500}
+.barra{height:6px;border-radius:9px;background:var(--line);overflow:hidden;margin:8px 0 12px}
+.barra>span{display:block;height:100%;width:0;background:var(--blue);transition:width .4s}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+.agenda{list-style:none;margin:0;padding:0}
+.agenda a{display:flex;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:9px;text-decoration:none;color:var(--ink);font-size:.92rem;border-left:3px solid transparent}
+.agenda a:hover{background:var(--t-blue)}
+.agenda a span:last-child{color:var(--muted);font-variant-numeric:tabular-nums;font-size:.85rem;white-space:nowrap}
+.agenda a.activo{background:var(--t-blue);border-left-color:var(--blue);font-weight:600}
+.agenda a.hecho{color:var(--muted)}
+.modo{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.92rem}
+.switch{position:relative;width:44px;height:24px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.switch span{position:absolute;inset:0;background:var(--line);border-radius:20px;cursor:pointer;transition:.2s}
+.switch span::before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.switch input:checked+span{background:var(--blue)}
+.switch input:checked+span::before{transform:translateX(20px)}
+.switch input:focus-visible+span{outline:2px solid var(--blue);outline-offset:2px}
+.py-estado{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:10px}
+.py-estado .dot{width:8px;height:8px;border-radius:50%;background:var(--orange)}
+.py-estado.listo .dot{background:var(--green)}
+
+/* buttons */
+button{font:inherit;cursor:pointer}
+.btn,.btn-run,.btn-sec{border:0;border-radius:8px;padding:6px 12px;font-size:.88rem;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.btn{background:var(--t-blue);color:var(--blue)}
+.btn-run{background:var(--green);color:#fff}
+.btn-run:disabled{opacity:.6;cursor:wait}
+.btn-sec{background:transparent;color:var(--muted);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* hero */
+.hero{text-align:center;padding:34px 10px 26px;position:relative}
+.hero h1{font-size:clamp(2.2rem,5vw,3.6rem);margin:0;line-height:1.1;display:inline-flex;gap:16px;align-items:center;letter-spacing:-.01em}
+.hero h1 i{color:var(--blue)}
+.hero p{color:var(--muted);font-size:1.25rem;margin:10px 0 0}
+.hero .pill{margin-top:14px}
+
+/* sections */
+.seccion{margin:0 0 46px}
+.sec-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.sec-tit{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.sec-tit>i{color:var(--blue);font-size:1.5rem;align-self:center}
+.sec-tit h2{margin:0;font-size:1.6rem;line-height:1.2}
+.sec-sub{color:var(--muted);font-size:.98rem}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:var(--t-blue);color:var(--blue);border-radius:20px;padding:4px 12px;font-size:.85rem;font-weight:600;display:inline-flex;gap:6px;align-items:center}
+.subtema{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font-size:1.15rem}
+.subnum{background:var(--blue);color:#fff;border-radius:8px;padding:1px 9px;font-size:.9rem}
+.submin{margin-left:auto;color:var(--muted);font-size:.85rem;font-weight:500}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.col>*+*{margin-top:14px}
+@media (max-width:1180px){.row2{grid-template-columns:minmax(0,1fr)}}
+
+.card{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px;border:1px solid var(--line)}
+.card-tit{margin:0 0 10px;font-size:1.05rem;display:flex;gap:9px;align-items:center}
+.card p{margin:.4em 0 .7em}
+.tiles{display:grid;gap:10px;margin:10px 0}
+.tiles.t2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tiles.t3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:600px){.tiles.t2,.tiles.t3{grid-template-columns:1fr}}
+.tile{border-radius:9px;padding:10px 12px;border-left:4px solid}
+.tile p{margin:2px 0 0;font-size:.9rem;color:var(--muted)}
+.tile-tit{font-weight:700;font-size:.95rem;display:flex;gap:7px;align-items:center}
+.t-blue{background:var(--t-blue);border-color:var(--blue)}.t-blue .tile-tit i{color:var(--blue)}
+.t-green{background:var(--t-green);border-color:var(--green)}.t-green .tile-tit i{color:var(--green)}
+.t-orange{background:var(--t-orange);border-color:var(--orange)}.t-orange .tile-tit i{color:var(--orange)}
+.t-purple{background:var(--t-purple);border-color:var(--purple)}.t-purple .tile-tit i{color:var(--purple)}
+.t-red{background:var(--t-red);border-color:var(--red)}.t-red .tile-tit i{color:var(--red)}
+
+/* code window */
+.win{background:var(--code);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.win-bar{display:flex;align-items:center;gap:7px;padding:10px 14px;color:#94a3b8;font-size:.82rem;border-bottom:1px solid rgba(148,163,184,.12)}
+.win-bar .d{width:11px;height:11px;border-radius:50%}
+.win-bar .d:nth-child(1){background:#ef4444}.win-bar .d:nth-child(2){background:#f59e0b}.win-bar .d:nth-child(3){background:#10b981}
+.win-bar .titulo{margin-left:8px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.win-bar button{background:rgba(148,163,184,.14);color:#cbd5e1;border:0;border-radius:6px;padding:3px 9px;font-size:.78rem;font-weight:600}
+.win-bar button.run{background:#10b981;color:#fff}
+.win pre.py,.win textarea{margin:0;padding:14px 16px;color:var(--code-ink);font-size:.86rem;line-height:1.6;overflow-x:auto;white-space:pre;tab-size:4}
+.win textarea,.editor{width:100%;min-height:160px;border:0;resize:vertical;background:#0f172a;color:#e2e8f0;display:block;font-size:.86rem;line-height:1.6;padding:14px 16px;white-space:pre;overflow:auto}
+.consola{margin:0;padding:12px 16px;background:#020617;color:#cbd5e1;font-size:.84rem;white-space:pre-wrap;border-top:1px solid #1e293b;max-height:340px;overflow:auto}
+.consola .err{color:#fca5a5}
+.consola .ayuda{display:block;margin-top:8px;padding:8px 10px;border-radius:7px;background:rgba(245,158,11,.14);color:#fde68a;font-family:"Segoe UI",system-ui,sans-serif;white-space:normal}
+.consola .meta{color:#64748b}
+.tok-c{color:#64748b;font-style:italic}.tok-s{color:#34d399}.tok-n{color:#60a5fa}.tok-k{color:#c084fc}.tok-b{color:#38bdf8}.tok-m{color:#93c5fd}.tok-v{color:#fbbf24}
+
+/* alert + teacher */
+.alerta{border-radius:12px;border:1px solid rgba(239,68,68,.35);border-left:5px solid var(--red);background:var(--t-red);padding:12px 16px}
+.alerta-tit{font-weight:700;color:var(--red);display:flex;gap:8px;align-items:center;margin-bottom:4px}
+.alerta p{margin:.35em 0}.alerta ul{margin:.3em 0;padding-left:1.2em}
+.alerta .win{margin-top:10px}
+.docente{border-radius:12px;border:1px dashed var(--docente-b);background:var(--docente);padding:12px 16px}
+.docente-tit{font-weight:700;color:var(--docente-b);display:flex;gap:8px;align-items:center;margin-bottom:4px}
+.docente p{margin:.35em 0}
+body.alumno .docente{display:none}
+
+/* tables */
+.tabla-wrap{overflow-x:auto}
+.tabla{width:100%;border-collapse:collapse;font-size:.9rem}
+.tabla th{text-align:left;color:var(--muted);font-weight:600;border-bottom:2px solid var(--line);padding:7px 8px}
+.tabla td{border-bottom:1px solid var(--line);padding:7px 8px;vertical-align:top}
+.tabla .none{color:var(--red);font-weight:600}.tabla .val{color:var(--green);font-weight:600}
+span.none{color:var(--red);font-weight:600}
+.traza{font-variant-numeric:tabular-nums;margin:10px 0}
+.traza td,.traza th{text-align:center}
+
+/* comparar */
+.comparar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.comparar>div{border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:5px}
+.comparar span{font-weight:700;font-size:.88rem}
+.comparar code{background:transparent!important;padding:0!important;font-size:.88rem}
+.comparar small{color:var(--muted)}
+.mal{background:var(--t-red)}.mal span{color:var(--red)}
+.bien{background:var(--t-green)}.bien span{color:var(--green)}
+.lista-ok{padding-left:1.2em;margin:.5em 0}.lista-ok li{margin:.25em 0}
+
+/* index guide */
+.idx-guia{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:8px 0 12px}
+.idx{display:flex;flex-direction:column;align-items:center;gap:2px}
+.idx .v{border-radius:8px;padding:8px 14px;font-weight:700;border-left:0;color:#fff}
+.idx .t-blue{background:var(--blue)}.idx .t-green{background:var(--green)}.idx .t-orange{background:var(--orange)}.idx .t-purple{background:var(--purple)}
+.idx small{color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums}
+.idx small.neg{color:var(--red)}
+
+/* chips */
+.chip-btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:4px 11px;font-size:.84rem}
+.chip-btn.on{background:var(--t-blue);border-color:var(--blue);color:var(--blue);font-weight:600}
+.chip-btn.accion{border-color:var(--green);color:var(--green)}
+.chip-btn code{background:transparent!important;padding:0!important}
+
+/* alias sim */
+.alias{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:8px}
+.alias-ctrl{display:flex;gap:6px;flex-wrap:wrap}
+.alias-mem{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 6px;min-height:90px;align-items:flex-end}
+.obj{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.etqs{display:flex;gap:6px}
+.etq{background:var(--orange);color:#fff;font-weight:700;border-radius:6px;padding:1px 10px;font-family:"Cascadia Code",Consolas,monospace;position:relative}
+.etq::after{content:"↓";position:absolute;left:50%;transform:translateX(-50%);bottom:-19px;color:var(--muted);font-weight:400}
+.caja{display:flex;border:2px solid var(--blue);border-radius:9px;overflow:hidden;margin-top:12px}
+.caja span{padding:6px 12px;border-right:1px solid var(--line);font-family:"Cascadia Code",Consolas,monospace;background:var(--card)}
+.caja span:last-child{border-right:0}
+.caja span.nuevo{background:var(--t-green);color:var(--green);font-weight:700}
+.obj small{color:var(--muted);font-size:.78rem;font-family:"Cascadia Code",Consolas,monospace}
+.alias-msg{font-size:.92rem;margin:4px 0 0;min-height:2.6em}
+
+/* slicer */
+.slicer{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:6px}
+.slicer-in{display:flex;align-items:center;gap:3px;font-size:1.05rem;flex-wrap:wrap}
+.slicer-in code{background:transparent!important;font-weight:700}
+.slicer-in input{width:64px;padding:5px 6px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--ink);font:inherit;font-size:.95rem;text-align:center}
+.slicer-pres{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0}
+.slicer-celdas{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:12px 0 6px}
+.celda{width:54px;border:2px solid var(--line);border-radius:9px;text-align:center;padding:4px 0;position:relative;transition:.2s}
+.celda b{display:block;font-size:1rem}
+.celda small{display:block;font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.celda.sel{border-color:var(--green);background:var(--t-green)}
+.celda .ord{position:absolute;top:-10px;right:-8px;background:var(--green);color:#fff;font-size:.7rem;border-radius:9px;padding:0 6px;font-weight:700}
+.slicer-res{text-align:center;font-family:"Cascadia Code",Consolas,monospace;font-size:.95rem}
+.slicer-res .err{color:var(--red)}
+
+/* ejercicios */
+.nivel-tit{display:flex;gap:10px;align-items:center;font-size:1.15rem;margin:30px 0 12px}
+.niveles{display:flex;gap:7px;flex-wrap:wrap}
+.ej-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.ej-grid.dios{grid-template-columns:1fr}
+.ej{background:var(--card);border-radius:14px;box-shadow:var(--shadow);border:1px solid var(--line);border-top:4px solid;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.n-basico{border-top-color:var(--green)}.n-intermedio{border-top-color:var(--orange)}.n-avanzado{border-top-color:var(--red)}.n-dios{border-top-color:var(--purple)}
+.ej-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ej-head h4{margin:0;font-size:1.02rem;flex:1;min-width:180px}
+.ej-id{font-weight:800;color:var(--muted);font-size:.85rem}
+.ej-enun p{margin:0}
+.badge{border-radius:20px;padding:3px 10px;font-size:.78rem;font-weight:700;display:inline-flex;gap:5px;align-items:center}
+.b-basico{background:var(--t-green);color:var(--green)}.b-intermedio{background:var(--t-orange);color:#d97706}.b-avanzado{background:var(--t-red);color:var(--red)}.b-dios{background:var(--t-purple);color:var(--purple)}
+.salida-esp{background:var(--t-blue);border-radius:9px;padding:8px 12px}
+.salida-esp span{font-size:.8rem;font-weight:700;color:var(--blue)}
+.salida-esp pre{margin:4px 0 0;font-size:.82rem;white-space:pre-wrap}
+.practica{border-radius:10px;overflow:hidden;background:var(--code)}
+.practica-bar{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;color:#94a3b8;font-size:.82rem;gap:8px;flex-wrap:wrap}
+.practica-btns{display:flex;gap:6px}
+.practica .btn-sec{color:#cbd5e1;border-color:#334155;padding:3px 9px;font-size:.8rem}
+.practica .btn-run{padding:3px 10px;font-size:.8rem}
+details{border:1px solid var(--line);border-radius:10px;padding:0 12px}
+details summary{cursor:pointer;padding:9px 0;font-weight:600;font-size:.92rem;display:flex;gap:7px;align-items:center;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"+";margin-left:auto;color:var(--muted);font-size:1.1rem}
+details[open] summary::after{content:"−"}
+details>div{padding:0 0 12px}
+details.pista summary{color:#d97706}
+details.solucion summary{color:var(--green)}
+details h5{margin:12px 0 4px;font-size:.95rem}
+.pasos{padding-left:1.3em;margin:.4em 0 .8em}.pasos li{margin:.3em 0}
+details .win{margin-top:8px}
+
+/* pausa */
+.pausa-in{display:flex;gap:18px;align-items:center;background:var(--card);border-radius:14px;padding:20px 24px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.pausa-in i{font-size:2rem;color:var(--orange)}
+.pausa-in h2{margin:0;font-size:1.3rem}.pausa-in p{margin:2px 0 0;color:var(--muted)}
+
+/* quiz */
+.q{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.q:last-child{border-bottom:0}
+.q-num{flex:none;width:28px;height:28px;border-radius:50%;background:var(--t-blue);color:var(--blue);font-weight:700;display:grid;place-items:center;font-size:.85rem}
+.q-body{flex:1;min-width:0}
+pre.q-code{background:var(--code);color:var(--code-ink);border-radius:9px;padding:10px 12px;margin:0 0 8px;font-size:.84rem;overflow-x:auto}
+.q-ops{display:flex;flex-wrap:wrap;gap:6px}
+.q-op{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:4px 12px;font-family:"Cascadia Code",Consolas,monospace;font-size:.85rem}
+.q-op.ok{background:var(--t-green);border-color:var(--green);color:var(--green);font-weight:700}
+.q-op.no{background:var(--t-red);border-color:var(--red);color:var(--red)}
+.q-fb{margin:6px 0 0;font-size:.88rem;min-height:1em}
+.q-score{font-weight:700;color:var(--blue);margin:10px 0 0}
+
+/* explorador de matriz */
+.mexp{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:6px}
+.mexp-grid{display:grid;grid-template-columns:auto repeat(4,minmax(0,56px));gap:6px;justify-content:center;margin:14px 0 8px;align-items:center}
+.mexp-grid .hdr{font-size:.75rem;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.mexp-grid button{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:9px 0;font-weight:700;font-family:"Cascadia Code",Consolas,monospace}
+.mexp-grid button.sel{border-color:var(--green);background:var(--t-green);color:var(--green)}
+.mexp-grid button.hl{border-color:var(--blue);background:var(--t-blue)}
+.mexp-res{text-align:center;font-family:"Cascadia Code",Consolas,monospace;font-size:.92rem;min-height:2.6em}
+.malias-mem{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0 6px;align-items:center}
+.mrows{display:flex;flex-direction:column;gap:6px}
+.mrow{display:flex;align-items:center;gap:8px}
+.mrow .etq{font-size:.8rem}
+.mrow .etq::after{content:none}
+.mrow .caja{margin-top:0}
+.mrow small{color:var(--muted);font-family:"Cascadia Code",Consolas,monospace;font-size:.76rem}
+.caja span.cambio{background:var(--t-red);color:var(--red);font-weight:700}
+/* consola flotante (modelo Clase 9) */
+.lanzador{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:40;border:0;border-radius:30px;padding:11px 18px;background:var(--blue);color:#fff;font-weight:700;font-size:.92rem;display:inline-flex;gap:8px;align-items:center;box-shadow:0 6px 20px rgba(15,27,45,.25)}
+.lanzador:hover{filter:brightness(1.08)}
+.cajon{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:50;width:min(580px,calc(100vw - 36px));max-height:calc(100vh - 36px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 50px rgba(15,27,45,.35);padding:16px 18px;display:none}
+.cajon.abierto{display:block}
+.cajon .cab{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.cajon .cab strong{font-size:1.1rem;display:flex;gap:8px;align-items:center}
+@media (max-width:600px){.cajon{right:8px;left:8px;width:auto;bottom:calc(8px + env(safe-area-inset-bottom,0px))}}
+.btn-mini{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:7px;padding:4px 10px;font-size:.82rem}
+.btn-mini:hover{border-color:var(--blue);color:var(--blue)}
+.btn-c{border:0;border-radius:7px;padding:8px 16px;font-weight:600;font-size:.9rem;background:var(--blue);color:#fff}
+.btn-c:disabled{opacity:.55;cursor:wait}
+.btn-c.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.ed{display:grid;grid-template-columns:auto minmax(0,1fr);background:var(--code);border:1px solid #334155;border-radius:10px;overflow:hidden;font-family:"Cascadia Code","JetBrains Mono",Consolas,monospace;font-size:.85rem;line-height:1.6}
+.ed:focus-within{border-color:var(--blue)}
+.ed .gutter{padding:12px 8px 12px 12px;text-align:right;color:#64748b;user-select:none;border-right:1px solid #334155;min-width:40px;background:#172033}
+.ed .gutter span{display:block}
+.ed .gutter span.err{color:#fff;background:var(--red);border-radius:3px;padding:0 4px;margin-right:-4px}
+.ed .area{position:relative;overflow:hidden}
+.ed .capa,.ed textarea{margin:0;border:0;padding:12px 14px;font:inherit;line-height:inherit;white-space:pre;tab-size:4;letter-spacing:0;word-spacing:0}
+.ed .capa{position:absolute;inset:0;overflow:hidden;pointer-events:none;color:#e2e8f0;background:transparent}
+.ed .capa code{background:none;padding:0;font-size:inherit;display:block;color:inherit}
+.ed textarea{position:relative;display:block;width:100%;min-height:9em;resize:none;background:transparent;color:transparent;caret-color:#e2e8f0;outline:none;overflow-x:auto;overflow-y:hidden}
+.ed textarea::selection{background:rgba(59,130,246,.35);color:transparent}
+.entradas{display:grid;gap:4px;margin-top:10px}
+.entradas label{font-size:.82rem;color:var(--muted)}
+.entradas textarea{font-family:"Cascadia Code",Consolas,monospace;font-size:.84rem;border:1px solid var(--line);border-radius:7px;padding:6px 10px;background:var(--card);color:var(--ink);resize:vertical;min-height:2.4em;line-height:1.5}
+.barra-acc{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+.barra-acc .atajo{font-size:.78rem;color:var(--muted);margin-left:auto}
+.consola-salida{margin-top:10px}
+.terminal{background:#0f172a;color:#e2e8f0;border-radius:10px;font-family:"Cascadia Code",Consolas,monospace;font-size:.82rem;line-height:1.6;padding:12px 14px;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow:auto}
+.terminal .tenue{color:#7f93ae}
+.terminal .rojo{color:#ff8f84}
+.explica{background:var(--t-red);border-radius:0 0 10px 10px;padding:14px 14px 10px;font-size:.9rem;margin-top:-6px}
+.explica strong{color:var(--red)}
+.btn-probar{margin-top:8px}
+/* footer */
+.pie{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line);padding:16px 0 26px;margin-top:10px}
+.pie .firma{font-weight:600;color:var(--ink)}
+@media print{aside.side,.practica,.win-bar button{display:none}.layout{grid-template-columns:1fr}details{border:0}details>div{display:block}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/brython@3.13.2/brython.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/brython@3.13.2/brython_stdlib.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" aria-label="Agenda y herramientas de la clase">
+  <div class="side-box">
+    <h4><i class="fa-regular fa-clock c-blue"></i> Reloj de la clase</h4>
+    <div class="reloj" id="reloj" aria-live="off">00:00</div>
+    <div class="barra"><span id="barra"></span></div>
+    <div class="btns"><button class="btn" id="t-play" type="button"><i class="fa-solid fa-play"></i> Iniciar</button><button class="btn-sec" id="t-reset" type="button">Reiniciar</button></div>
+  </div>
+  <div class="side-box">
+    <h4><i class="fa-solid fa-list-ol c-blue"></i> Agenda (150 min)</h4>
+    <ul class="agenda" id="agenda"></ul>
+  </div>
+  <div class="side-box">
+    <label class="modo"><span id="modo-lbl">Vista docente</span><span class="switch"><input type="checkbox" id="modo-docente" checked><span></span></span></label>
+    <p class="muted" style="margin:.5em 0 0">Apagalo para proyectar sin las notas para el docente.</p>
+    <div class="py-estado" id="py-estado"><span class="dot"></span><span>Cargando Python…</span></div>
+  </div>
+</aside>
+<main>
+<header class="hero">
+  <h1><i class="fa-solid fa-table-cells"></i> Listas y matrices en Python</h1>
+  <p>Matrices como listas anidadas, recorridos y depuración: clase teórico-práctica</p>
+  <div class="pills" style="justify-content:center;margin-top:14px"><span class="pill"><i class="fa-solid fa-graduation-cap"></i> Programación en Python</span><span class="pill"><i class="fa-solid fa-ban"></i> Python nativo, sin NumPy</span><span class="pill"><i class="fa-regular fa-clock"></i> 2 h 30 min</span></div>
+</header>
+<section id="apertura" class="seccion">
+<header class="sec-head">
+  <div class="sec-tit"><i class="fa-solid fa-door-open"></i><h2>Apertura</h2><span class="sec-sub">| Encuadre, objetivos y restricción de la clase</span></div>
+  <div class="pills"><span class="pill"><i class="fa-regular fa-clock"></i> 5 min</span><span class="pill"><i class="fa-solid fa-flag"></i> Encuadre</span></div>
+</header>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-bullseye c-blue"></i> Objetivos de aprendizaje</h3><p>Al finalizar la clase, cada estudiante va a poder:</p>
+<div class="tiles t2">
+<div class="tile t-blue"><div class="tile-tit"><i class="fa-solid fa-table-cells"></i> Representar</div><p>Modelar una tabla de datos como <b>lista de listas</b> e identificar sus <b>filas</b> y <b>columnas</b>.</p></div>
+<div class="tile t-green"><div class="tile-tit"><i class="fa-solid fa-arrows-turn-to-dots"></i> Recorrer</div><p>Usar <b>bucles anidados</b> por índices y por elementos, eligiendo el adecuado.</p></div>
+<div class="tile t-orange"><div class="tile-tit"><i class="fa-solid fa-calculator"></i> Calcular</div><p>Obtener sumas por fila, columna y diagonal, y el <b>máximo con sus coordenadas</b>.</p></div>
+<div class="tile t-purple"><div class="tile-tit"><i class="fa-solid fa-bug"></i> Depurar</div><p>Detectar <b>aliasing</b> entre filas, evitar <b>IndexError</b> y validar con <b>guardianes</b>.</p></div>
+</div></div><div class="card"><h3 class="card-tit"><i class="fa-solid fa-ban c-blue"></i> Restricción de la clase: sin NumPy</h3><p>Todas las matrices se construyen con <b>listas anidadas</b> y sintaxis nativa de Python. No se importa <code>numpy</code> ni ninguna otra librería externa. El objetivo es entender qué pasa “por debajo” antes de usar herramientas que lo resuelven solas.</p></div><div class="card"><h3 class="card-tit"><i class="fa-solid fa-list-check c-blue"></i> Agenda de la clase (150 min)</h3><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Bloque</th><th>Contenido</th><th>Tiempo</th></tr></thead><tbody>
+<tr><td>Apertura</td><td>Encuadre y pregunta disparadora</td><td>5'</td></tr>
+<tr><td>Módulo 1</td><td>Repaso de listas y matriz como lista anidada</td><td>35'</td></tr>
+<tr><td>Módulo 2</td><td>Recorridos y operaciones con bucles anidados</td><td>35'</td></tr>
+<tr><td>Pausa</td><td>Recreo</td><td>10'</td></tr>
+<tr><td>Módulo 3</td><td>Depuración y errores típicos</td><td>20'</td></tr>
+<tr><td>Módulo 4</td><td>Práctica progresiva (4 niveles)</td><td>40'</td></tr>
+<tr><td>Cierre</td><td>Repaso relámpago y tarea</td><td>5'</td></tr>
+</tbody></table></div></div><aside class="docente"><div class="docente-tit"><i class="fa-solid fa-chalkboard-user"></i> Nota para el docente</div><p><b>Pregunta disparadora:</b> “¿Cómo guardarían las notas de 30 alumnos en 3 parciales?”. Mostrá que una lista por alumno funciona, pero que necesitamos <b>una sola estructura</b> para recorrer todo junto: eso es una matriz. Otros ejemplos que funcionan bien: butacas de un cine, un tablero de ta-te-ti, una planilla de ventas.</p>
+<p>Todos los bloques de código se pueden <b>ejecutar en vivo</b> con ▶. Pedí siempre que predigan la salida antes de ejecutar.</p></aside></div><div class="col"><div class="win"><pre class="py" data-title="python — de la lista a la matriz" data-run="1"># Una lista: una dimensión (las notas de UN alumno)
+notas_ana = [7, 8, 9]
+
+# Una matriz: lista de listas (3 alumnos x 3 parciales)
+notas = [
+    [7, 8, 9],     # fila 0 -&gt; Ana
+    [5, 6, 4],     # fila 1 -&gt; Luis
+    [10, 9, 8],    # fila 2 -&gt; Sofía
+]
+
+print(notas[1])       # [5, 6, 4] -&gt; la fila completa de Luis
+print(notas[1][2])    # 4 -&gt; Luis, tercer parcial
+print(len(notas))     # 3 -&gt; cantidad de filas (alumnos)</pre></div></div></div>
+</section>
+<section id="m1" class="seccion">
+<header class="sec-head">
+  <div class="sec-tit"><i class="fa-solid fa-table-cells"></i><h2>Módulo 1: Fundamentos de listas y matriz como lista anidada</h2><span class="sec-sub">| Repaso, dimensiones, acceso y aliasing</span></div>
+  <div class="pills"><span class="pill"><i class="fa-regular fa-clock"></i> 35 min</span><span class="pill"><i class="fa-solid fa-book-open"></i> Teoría</span></div>
+</header>
+
+<h3 class="subtema"><span class="subnum">1.1</span>Repaso express de listas<span class="submin">8 min</span></h3>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-rotate-left c-blue"></i> Lo que necesitamos de la clase anterior</h3><div class="tiles t2"><div class="tile t-blue"><div class="tile-tit"><i class="fa-solid fa-arrow-down-1-9"></i> Indexación</div><p>Desde <code>0</code> hasta <code>len - 1</code>; <code>-1</code> es el último.</p></div><div class="tile t-green"><div class="tile-tit"><i class="fa-solid fa-pen"></i> Mutabilidad</div><p>Se cambian “en el lugar”: <code>t[i] = valor</code>.</p></div><div class="tile t-orange"><div class="tile-tit"><i class="fa-solid fa-wrench"></i> Métodos</div><p><code>append</code>, <code>insert</code>, <code>remove</code>, <code>pop</code>, <code>sort</code>, <code>copy</code>.</p></div><div class="tile t-purple"><div class="tile-tit"><i class="fa-solid fa-link"></i> Referencias</div><p><code>b = a</code> no copia: ambas apuntan a la misma lista.</p></div></div><p>Las cuatro ideas reaparecen multiplicadas en las matrices: cada fila es una lista con todas estas propiedades.</p></div><aside class="alerta"><div class="alerta-tit"><i class="fa-solid fa-triangle-exclamation"></i> Alerta de error típico: reasignar un método in-place</div><p><code>t = t.append(x)</code> deja <code>t</code> valiendo <code>None</code>. Con matrices es peor: <code>fila = fila.sort()</code> no rompe en esa línea, sino varias líneas después. Los métodos que modifican la lista devuelven <code>None</code>.</p></aside></div><div class="col"><div class="win"><pre class="py" data-title="python — repaso de listas" data-run="1">t = [30, 10, 20]
+print(t[0], t[-1])     # 30 20 -&gt; primer y último elemento
+t[1] = 15              # mutabilidad: cambio en el lugar
+t.append(40)           # agrega al final (devuelve None)
+t.insert(0, 5)         # inserta en la posición 0
+quitado = t.pop()      # quita y DEVUELVE el último
+print(t, quitado)      # [5, 30, 15, 20] 40
+
+b = t                  # alias: misma lista
+c = t.copy()           # copia: lista nueva
+b.append(99)
+print(t)               # [5, 30, 15, 20, 99] &lt;- cambió por b
+print(c)               # [5, 30, 15, 20]     &lt;- la copia no</pre></div></div></div>
+
+<h3 class="subtema"><span class="subnum">1.2</span>La matriz como lista de listas<span class="submin">10 min</span></h3>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-border-all c-blue"></i> Filas, columnas y dimensiones</h3><p>Una <b>matriz</b> es una lista cuyos elementos son listas del mismo largo. Cada sublista es una <b>fila</b>; la posición dentro de la fila es la <b>columna</b>.</p>
+<div class="tiles t2"><div class="tile t-blue"><div class="tile-tit"><i class="fa-solid fa-grip-lines"></i> Filas</div><p><code>len(matriz)</code>: cuántas sublistas hay.</p></div><div class="tile t-green"><div class="tile-tit"><i class="fa-solid fa-grip-lines-vertical"></i> Columnas</div><p><code>len(matriz[0])</code>: cuánto mide una fila.</p></div></div>
+<p class="muted">Explorador: tocá una celda para ver cómo se accede. Usá los botones para resaltar su fila, su columna o la diagonal.</p>
+<div class="mexp" id="mexp">
+  <div class="alias-ctrl"><button class="chip-btn on" data-v="celda">Celda</button><button class="chip-btn" data-v="fila">Fila</button><button class="chip-btn" data-v="col">Columna</button><button class="chip-btn" data-v="diag">Diagonal (i == j)</button></div>
+  <div class="mexp-grid" role="grid" aria-label="Matriz de 3 filas por 4 columnas"></div>
+  <div class="mexp-res" aria-live="polite"></div>
+</div></div><aside class="docente"><div class="docente-tit"><i class="fa-solid fa-chalkboard-user"></i> Nota para el docente</div><p>Insistí con la frase “<b>primero la fila, después la columna</b>”. Con el explorador, pedí a alguien que diga en voz alta cómo accedería al 10 antes de tocarlo. Remarcá que la matriz del ejemplo es de 3x4: no es cuadrada, y eso importa en el Módulo 3.</p></aside></div><div class="col"><div class="win"><pre class="py" data-title="python — dimensiones y acceso" data-run="1">matriz = [
+    [1, 2, 3, 4],       # fila 0
+    [5, 6, 7, 8],       # fila 1
+    [9, 10, 11, 12],    # fila 2
+]
+
+filas = len(matriz)           # 3 -&gt; cantidad de sublistas
+columnas = len(matriz[0])     # 4 -&gt; largo de una fila
+print(f"Dimensión: {filas}x{columnas}")
+
+print(matriz[0])              # [1, 2, 3, 4] -&gt; una fila completa
+print(matriz[2][1])           # 10 -&gt; fila 2, columna 1
+print(matriz[-1][-1])         # 12 -&gt; última fila, última columna
+
+# Una COLUMNA no se obtiene directo: hay que recorrer las filas
+columna_1 = []
+for fila in matriz:
+    columna_1.append(fila[1])
+print(columna_1)              # [2, 6, 10]</pre></div><aside class="alerta"><div class="alerta-tit"><i class="fa-solid fa-triangle-exclamation"></i> Alerta de error típico: sintaxis de NumPy en listas nativas</div><p>Dos confusiones muy frecuentes de quien vio NumPy o leyó código de ciencia de datos:</p>
+<ul><li><code>matriz[1, 2]</code> → <b>TypeError</b>: en listas nativas la coma arma una tupla. Lo correcto es <code>matriz[1][2]</code>.</li>
+<li><code>matriz[:][1]</code> <b>no</b> devuelve la columna 1: <code>matriz[:]</code> es una copia de la matriz entera, y <code>[1]</code> toma su fila 1.</li></ul><div class="win"><pre class="py" data-title="python — trampas de sintaxis" data-run="1">matriz = [[1, 2, 3], [4, 5, 6]]
+print(matriz[:][1])    # [4, 5, 6] -&gt; ¡es la FILA 1, no la columna!
+print(matriz[1, 2])    # TypeError: list indices must be integers or slices, not tuple</pre></div></aside></div></div>
+
+<h3 class="subtema"><span class="subnum">1.3</span>Modificar y hacer crecer una matriz<span class="submin">5 min</span></h3>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-pen-to-square c-blue"></i> Cambiar celdas, filas y dimensiones</h3><p>Como cada fila es una lista mutable, se puede cambiar una <b>celda</b> (<code>m[i][j] = v</code>), una <b>fila entera</b> (<code>m[i] = [...]</code>) o agregar filas con <code>append()</code>. Para agregar una <b>columna</b> hay que hacer <code>append()</code> en <b>cada</b> fila.</p></div><aside class="alerta"><div class="alerta-tit"><i class="fa-solid fa-triangle-exclamation"></i> Alerta de error típico: filas de distinto largo (matriz “dentada”)</div><p>Python permite <code>[[1, 2, 3], [4, 5]]</code>, pero ya no es una matriz rectangular. Cualquier recorrido que use <code>len(m[0])</code> como cantidad de columnas va a fallar con <b>IndexError</b> en la fila corta. Al agregar una columna, no te olvides de ninguna fila.</p></aside></div><div class="col"><div class="win"><pre class="py" data-title="python — modificación" data-run="1">m = [
+    [0, 0, 0],
+    [0, 0, 0],
+]
+m[0][2] = 7             # modificar UNA celda: fila 0, columna 2
+m[1] = [4, 5, 6]        # reemplazar una FILA entera
+m.append([8, 8, 8])     # agregar una fila nueva al final
+for fila in m:          # agregar una COLUMNA: un valor por fila
+    fila.append(1)
+
+for fila in m:
+    print(fila)
+print(f"Ahora es de {len(m)}x{len(m[0])}")   # 3x4</pre></div></div></div>
+
+<h3 class="subtema"><span class="subnum">1.4</span>Mutabilidad y aliasing en matrices<span class="submin">12 min</span></h3>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-clone c-blue"></i> El error más grave: <code>[[0] * 3] * 3</code></h3><p><code>[0] * 3</code> crea <b>una</b> fila. Al multiplicar por 3 la lista exterior, Python <b>no crea tres filas</b>: repite tres veces la <b>referencia</b> a la misma fila. Cambiar una celda “cambia” toda la columna.</p>
+<p>¿Por qué <code>[0] * 3</code> sí funciona para la fila? Porque los <code>int</code> son inmutables: compartir el 0 no es un problema. Las <b>listas</b>, en cambio, son mutables.</p>
+<p class="muted">Simulador: elegí cómo se crea <code>M</code> y ejecutá la asignación.</p>
+<div class="alias" id="malias">
+  <div class="alias-ctrl">
+    <button class="chip-btn on" data-modo="mal"><code>M = [[0] * 3] * 3</code></button>
+    <button class="chip-btn" data-modo="bien"><code>M = [[0] * 3 for _ in range(3)]</code></button>
+    <button class="chip-btn accion" data-acc="set"><code>M[0][0] = 5</code></button>
+    <button class="chip-btn" data-acc="reset">Reiniciar</button>
+  </div>
+  <div class="malias-mem" aria-live="polite"></div>
+  <p class="alias-msg"></p>
+</div></div><aside class="alerta"><div class="alerta-tit"><i class="fa-solid fa-triangle-exclamation"></i> Alerta de error típico: copiar una matriz con <code>.copy()</code></div><p><code>M.copy()</code> o <code>M[:]</code> copian la lista exterior, pero las <b>filas siguen compartidas</b>. Para una copia independiente: <code>[fila.copy() for fila in M]</code> o <code>copy.deepcopy(M)</code>.</p><div class="win"><pre class="py" data-title="python — copias de matrices" data-run="1">import copy
+
+M = [[1, 2], [3, 4]]
+superficial = M.copy()
+superficial[0][0] = 99
+print(M)                         # [[99, 2], [3, 4]] &lt;- ¡cambió la original!
+
+M = [[1, 2], [3, 4]]
+independiente = [fila.copy() for fila in M]   # copia fila por fila
+profunda = copy.deepcopy(M)                   # alternativa del módulo copy
+independiente[0][0] = 99
+profunda[1][1] = 77
+print(M)                         # [[1, 2], [3, 4]] &lt;- intacta</pre></div></aside></div><div class="col"><div class="win"><pre class="py" data-title="python — inicialización correcta" data-run="1"># ERROR: las 3 filas son la MISMA lista
+M = [[0] * 3] * 3
+M[0][0] = 5
+print(M)                  # [[5, 0, 0], [5, 0, 0], [5, 0, 0]]
+print(M[0] is M[1])       # True -&gt; misma fila en memoria
+
+# CORRECTO 1: bucle que crea una fila NUEVA en cada vuelta
+M = []
+for i in range(3):
+    M.append([0] * 3)     # [0] * 3 se evalúa 3 veces -&gt; 3 filas distintas
+M[0][0] = 5
+print(M)                  # [[5, 0, 0], [0, 0, 0], [0, 0, 0]]
+
+# CORRECTO 2: comprensión de listas (lo mismo, en una línea)
+M = [[0] * 3 for _ in range(3)]
+M[0][0] = 5
+print(M)                  # [[5, 0, 0], [0, 0, 0], [0, 0, 0]]
+print(M[0] is M[1])       # False -&gt; filas independientes</pre></div><div class="win"><pre class="py" data-title="python — alias de una fila" data-run="1"># El aliasing también aparece al "guardar" una fila en otra variable
+M = [[1, 2, 3], [4, 5, 6]]
+primera = M[0]            # NO es copia: es la misma fila
+primera[0] = 100
+print(M)                  # [[100, 2, 3], [4, 5, 6]]
+
+# Si querés trabajar aparte, copiá la fila
+primera = M[0].copy()
+primera[0] = -1
+print(M[0])               # [100, 2, 3] &lt;- no cambió</pre></div><aside class="docente"><div class="docente-tit"><i class="fa-solid fa-chalkboard-user"></i> Nota para el docente</div><p>Antes de ejecutar el primer bloque, hacé una votación a mano alzada: “¿cuántos 5 va a haber?”. La mayoría responde uno. Dibujá tres flechas desde <code>M</code> hacia una sola caja. Este error aparece en exámenes y también en código profesional.</p></aside></div></div>
+</section>
+<section id="m2" class="seccion">
+<header class="sec-head">
+  <div class="sec-tit"><i class="fa-solid fa-arrows-turn-to-dots"></i><h2>Módulo 2: Operaciones y recorridos con bucles anidados</h2><span class="sec-sub">| Índices, elementos, sumas, diagonal y extremos</span></div>
+  <div class="pills"><span class="pill"><i class="fa-regular fa-clock"></i> 35 min</span><span class="pill"><i class="fa-solid fa-gears"></i> Teoría + práctica</span></div>
+</header>
+
+<div class="card"><h3 class="card-tit"><i class="fa-solid fa-signs-post c-blue"></i> ¿Por índices o por elementos?</h3>
+<div class="tabla-wrap"><table class="tabla"><thead><tr><th></th><th>Por índices: <code>for i in range(...)</code></th><th>Por elementos: <code>for fila in matriz</code></th></tr></thead><tbody>
+<tr><td>Sabés en qué posición estás</td><td class="val">Sí (<code>i</code>, <code>j</code>)</td><td class="none">No</td></tr>
+<tr><td>Podés modificar la celda</td><td class="val">Sí: <code>m[i][j] = ...</code></td><td class="none">No: <code>x = ...</code> no cambia la matriz</td></tr>
+<tr><td>Recorrer por columnas</td><td class="val">Sí, invirtiendo los bucles</td><td class="none">No directamente</td></tr>
+<tr><td>Legibilidad</td><td>Más verboso</td><td class="val">Más claro</td></tr>
+<tr><td>Usalo para…</td><td>Coordenadas, diagonales, columnas, modificar</td><td>Sumar, contar, imprimir, buscar valores</td></tr>
+</tbody></table></div></div>
+
+<h3 class="subtema"><span class="subnum">2.1</span>Recorrido por índices<span class="submin">8 min</span></h3>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-hashtag c-blue"></i> Dos bucles, dos índices</h3><p>El bucle <b>externo</b> recorre las filas (<code>i</code>) y el <b>interno</b> las columnas (<code>j</code>). Por cada vuelta del externo, el interno se ejecuta completo: en una matriz de 3x4 el cuerpo se ejecuta 12 veces.</p>
+<p>Usá <code>len(m)</code> para las filas y <code>len(m[i])</code> (o <code>len(m[0])</code> si es rectangular) para las columnas.</p></div><aside class="docente"><div class="docente-tit"><i class="fa-solid fa-chalkboard-user"></i> Nota para el docente</div><p>Ejecutá el primer bloque y pedí que observen el <b>orden</b> en que aparecen las coordenadas: fila por fila. Después preguntá: “¿Qué cambia si intercambio los dos <code>for</code>?”. Es la base de la suma por columnas.</p></aside></div><div class="col"><div class="win"><pre class="py" data-title="python — recorrido por índices" data-run="1">m = [
+    [1, 2, 3],
+    [4, 5, 6],
+]
+for i in range(len(m)):              # i recorre las filas: 0, 1
+    for j in range(len(m[i])):       # j recorre las columnas: 0, 1, 2
+        print(f"m[{i}][{j}] = {m[i][j]}")
+
+# Con índices SÍ podemos modificar la matriz
+for i in range(len(m)):
+    for j in range(len(m[i])):
+        m[i][j] = m[i][j] * 10
+print(m)                             # [[10, 20, 30], [40, 50, 60]]</pre></div></div></div>
+
+<h3 class="subtema"><span class="subnum">2.2</span>Recorrido por elementos<span class="submin">7 min</span></h3>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-list c-blue"></i> Más simple, pero sin posiciones</h3><p><code>for fila in matriz</code> entrega cada sublista; <code>for x in fila</code> entrega cada valor. Es ideal para imprimir, sumar o contar. Si además necesitás la posición, <code>enumerate()</code> te da índice y elemento a la vez.</p></div><aside class="alerta"><div class="alerta-tit"><i class="fa-solid fa-triangle-exclamation"></i> Alerta de error típico: modificar la variable del bucle</div><p>En <code>for x in fila: x = 0</code>, <code>x</code> es una variable suelta que recibe una copia del valor (un número inmutable). Reasignarla <b>no cambia</b> la matriz. Para modificar, usá índices: <code>fila[j] = 0</code>.</p></aside></div><div class="col"><div class="win"><pre class="py" data-title="python — recorrido por elementos" data-run="1">m = [
+    [1, 2, 3],
+    [4, 5, 6],
+]
+for fila in m:                 # fila = [1, 2, 3], luego [4, 5, 6]
+    for x in fila:             # x = cada número de la fila
+        print(x, end=" ")
+    print()                    # salto de línea al terminar la fila
+
+# Trampa: esto NO modifica la matriz
+for fila in m:
+    for x in fila:
+        x = 0
+print(m)                       # [[1, 2, 3], [4, 5, 6]] &lt;- intacta
+
+# enumerate: elementos + posición, sin range(len(...))
+for i, fila in enumerate(m):
+    for j, x in enumerate(fila):
+        if x % 2 == 0:
+            fila[j] = 0        # modificar SÍ funciona, por índice
+print(m)                       # [[1, 0, 3], [0, 5, 0]]</pre></div></div></div>
+
+<h3 class="subtema"><span class="subnum">2.3</span>Operaciones nativas: sumas y diagonal<span class="submin">12 min</span></h3>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-plus-minus c-blue"></i> Cuatro cálculos, un mismo esqueleto</h3><div class="tiles t2"><div class="tile t-blue"><div class="tile-tit"><i class="fa-solid fa-plus"></i> Suma total</div><p>Un acumulador fuera de los dos bucles.</p></div><div class="tile t-green"><div class="tile-tit"><i class="fa-solid fa-grip-lines"></i> Por filas</div><p>Acumulador que se reinicia <b>dentro</b> del bucle de filas.</p></div><div class="tile t-orange"><div class="tile-tit"><i class="fa-solid fa-grip-lines-vertical"></i> Por columnas</div><p>Bucles <b>invertidos</b>: afuera <code>j</code>, adentro <code>i</code>.</p></div><div class="tile t-purple"><div class="tile-tit"><i class="fa-solid fa-slash"></i> Diagonal principal</div><p>Las celdas donde <code>i == j</code>. Solo en matrices cuadradas.</p></div></div><p>Las resolvemos con bucles para entender el mecanismo. <code>sum(fila)</code> es una función nativa válida que podés usar como atajo una vez que entendés qué hace.</p></div><aside class="alerta"><div class="alerta-tit"><i class="fa-solid fa-triangle-exclamation"></i> Alerta de error típico: el acumulador en el lugar equivocado</div><p>Si <code>suma_fila = 0</code> queda <b>fuera</b> del bucle de filas, cada fila arrastra la suma de las anteriores: obtenés sumas acumuladas en vez de sumas por fila. Si queda <b>dentro</b> del bucle interno, se reinicia en cada celda y siempre vale el último número.</p></aside><aside class="alerta"><div class="alerta-tit"><i class="fa-solid fa-triangle-exclamation"></i> Alerta de error típico: diagonal con un solo bucle mal armado</div><p>Para la diagonal no hacen falta dos bucles: <code>m[i][i]</code> con un solo <code>for i in range(len(m))</code> alcanza. Si la matriz no es cuadrada, validá antes (<code>len(m) == len(m[0])</code>); si no, aparece un <b>IndexError</b> o una “diagonal” incompleta.</p></aside></div><div class="col"><div class="win"><pre class="py" data-title="python — sumas y diagonal" data-run="1">m = [
+    [2, 4, 6],
+    [1, 3, 5],
+    [7, 8, 9],
+]
+n = len(m)
+
+# 1) Suma total
+total = 0
+for fila in m:
+    for x in fila:
+        total += x
+print("Total:", total)                    # 45
+
+# 2) Suma por filas
+sumas_filas = []
+for fila in m:
+    suma_fila = 0                         # se reinicia en CADA fila
+    for x in fila:
+        suma_fila += x
+    sumas_filas.append(suma_fila)
+print("Por filas:", sumas_filas)          # [12, 9, 24]
+
+# 3) Suma por columnas: bucles invertidos
+sumas_cols = []
+for j in range(len(m[0])):                # afuera: columnas
+    suma_col = 0
+    for i in range(len(m)):               # adentro: filas
+        suma_col += m[i][j]
+    sumas_cols.append(suma_col)
+print("Por columnas:", sumas_cols)        # [10, 15, 20]
+
+# 4) Diagonal principal: i == j
+diagonal = 0
+for i in range(n):
+    for j in range(n):
+        if i == j:
+            diagonal += m[i][j]
+print("Diagonal (doble bucle):", diagonal)   # 14
+
+diagonal = 0
+for i in range(n):                        # versión directa: m[i][i]
+    diagonal += m[i][i]
+print("Diagonal (un bucle):", diagonal)      # 14
+
+# Bonus: diagonal secundaria -&gt; i + j == n - 1
+secundaria = 0
+for i in range(n):
+    secundaria += m[i][n - 1 - i]
+print("Diagonal secundaria:", secundaria)    # 16</pre></div></div></div>
+
+<h3 class="subtema"><span class="subnum">2.4</span>Máximo y mínimo con sus coordenadas<span class="submin">8 min</span></h3>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-location-crosshairs c-blue"></i> Recordar el valor y dónde está</h3><p>Además del valor, guardamos <b>fila</b> y <b>columna</b> del mejor encontrado. Por eso conviene recorrer <b>por índices</b>. Los extremos se inicializan con una celda real, <code>m[0][0]</code>, nunca con 0.</p></div><aside class="alerta"><div class="alerta-tit"><i class="fa-solid fa-triangle-exclamation"></i> Alerta de error típico: inicializar el máximo con 0</div><p>Con una matriz de temperaturas bajo cero, <code>maximo = 0</code> devuelve 0, un valor que ni siquiera está en la matriz, y coordenadas inventadas. Inicializá con <code>m[0][0]</code> y coordenadas <code>(0, 0)</code>.</p>
+<p>Y ojo con los empates: <code>&gt;</code> se queda con la <b>primera</b> aparición; <code>&gt;=</code>, con la <b>última</b>.</p></aside></div><div class="col"><div class="win"><pre class="py" data-title="python — extremos con coordenadas" data-run="1">m = [
+    [3, 8, 1],
+    [9, 2, 7],
+    [4, 6, 5],
+]
+
+maximo, fila_max, col_max = m[0][0], 0, 0     # arrancar con una celda REAL
+minimo, fila_min, col_min = m[0][0], 0, 0
+
+for i in range(len(m)):
+    for j in range(len(m[i])):
+        if m[i][j] &gt; maximo:
+            maximo, fila_max, col_max = m[i][j], i, j
+        if m[i][j] &lt; minimo:
+            minimo, fila_min, col_min = m[i][j], i, j
+
+print(f"Máximo: {maximo} en (fila {fila_max}, columna {col_max})")   # 9 en (1, 0)
+print(f"Mínimo: {minimo} en (fila {fila_min}, columna {col_min})")   # 1 en (0, 2)</pre></div><aside class="docente"><div class="docente-tit"><i class="fa-solid fa-chalkboard-user"></i> Nota para el docente</div><p><b>Actividad (3 min):</b> pedí que adapten el código para encontrar el máximo de <b>cada fila</b> (una lista de máximos). Obliga a decidir dónde va la inicialización, igual que en la suma por filas.</p></aside></div></div>
+</section>
+<section id="pausa" class="seccion pausa"><div class="pausa-in"><i class="fa-solid fa-mug-hot"></i><div><h2>Pausa: 10 minutos</h2><p>Volvemos con depuración: cómo encontrar los errores típicos de las matrices.</p></div></div></section>
+<section id="m3" class="seccion">
+<header class="sec-head">
+  <div class="sec-tit"><i class="fa-solid fa-bug-slash"></i><h2>Módulo 3: Depuración y errores típicos</h2><span class="sec-sub">| IndexError, aliasing y patrón guardián</span></div>
+  <div class="pills"><span class="pill"><i class="fa-regular fa-clock"></i> 20 min</span><span class="pill"><i class="fa-solid fa-gears"></i> Teoría + práctica</span></div>
+</header>
+
+<h3 class="subtema"><span class="subnum">3.1</span>IndexError: len(matriz) vs len(matriz[0])<span class="submin">8 min</span></h3>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-ruler-combined c-blue"></i> Filas no son columnas</h3><div class="comparar"><div class="bien"><span>Filas</span><code>len(matriz)</code><small>cantidad de sublistas</small></div><div class="bien"><span>Columnas</span><code>len(matriz[0])</code><small>largo de una fila</small></div></div>
+<p>En una matriz <b>cuadrada</b> los dos valores coinciden y el error queda oculto. Aparece recién con una matriz <b>rectangular</b>. Por eso conviene probar siempre con una matriz no cuadrada, por ejemplo de 2x3.</p>
+<p><b>Cómo depurarlo:</b> imprimí las dimensiones al principio y los índices dentro del bucle. La última línea <code>[DEBUG]</code> antes del error te dice exactamente qué índice se salió del rango.</p></div><aside class="alerta"><div class="alerta-tit"><i class="fa-solid fa-triangle-exclamation"></i> Alerta de error típico: los rangos intercambiados</div><p><code>for i in range(len(m[0]))</code> con <code>m[i][j]</code> usa la cantidad de <b>columnas</b> para recorrer <b>filas</b>. Regla mnemotécnica: el índice que va primero en <code>m[i][j]</code> se recorre con <code>len(m)</code>.</p></aside></div><div class="col"><div class="win"><pre class="py" data-title="python — bug de dimensiones" data-run="1">m = [
+    [1, 2, 3],
+    [4, 5, 6],
+]                                 # 2 filas x 3 columnas
+print(f"[DEBUG] filas={len(m)} columnas={len(m[0])}")
+
+# Bug: los rangos están intercambiados
+for i in range(len(m[0])):        # ¡usa columnas (3) para las filas!
+    for j in range(len(m)):       # ¡usa filas (2) para las columnas!
+        print(f"[DEBUG] i={i} j={j}")
+        print(m[i][j])            # IndexError cuando i llega a 2</pre></div><div class="win"><pre class="py" data-title="python — corregido" data-run="1">m = [
+    [1, 2, 3],
+    [4, 5, 6],
+]
+for i in range(len(m)):           # filas: 0, 1
+    for j in range(len(m[0])):    # columnas: 0, 1, 2
+        print(m[i][j], end=" ")
+    print()</pre></div></div></div>
+
+<h3 class="subtema"><span class="subnum">3.2</span>Detectar aliasing entre filas<span class="submin">6 min</span></h3>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-fingerprint c-blue"></i> Las filas tienen “huella digital”</h3><p>Si al modificar una celda cambian varias filas, sospechá aliasing. Dos herramientas nativas para confirmarlo:</p>
+<ul class="lista-ok"><li><code>m[0] is m[1]</code>: <code>True</code> si son el <b>mismo objeto</b>.</li>
+<li><code>id(fila)</code>: si dos filas tienen el mismo id, son la misma lista.</li></ul>
+<p>Con una función de diagnóstico podés revisar cualquier matriz antes de usarla.</p></div><aside class="alerta"><div class="alerta-tit"><i class="fa-solid fa-triangle-exclamation"></i> Alerta de error típico: agregar la misma fila varias veces</div><p>Crear <code>fila = [0, 0, 0]</code> fuera del bucle y hacer <code>m.append(fila)</code> adentro produce el mismo problema que <code>[[0] * 3] * 3</code>. La fila nueva tiene que crearse <b>dentro</b> del bucle.</p></aside></div><div class="col"><div class="win"><pre class="py" data-title="python — diagnóstico de aliasing" data-run="1">def filas_compartidas(m):
+    """Devuelve los pares de filas que son el MISMO objeto."""
+    pares = []
+    for i in range(len(m)):
+        for j in range(i + 1, len(m)):
+            if m[i] is m[j]:
+                pares.append((i, j))
+    return pares
+
+# Bug sutil: la fila se crea UNA sola vez, fuera del bucle
+fila = [0, 0, 0]
+m = []
+for _ in range(3):
+    m.append(fila)
+for f in m:
+    print("[DEBUG] id de la fila:", id(f))
+print("Filas compartidas:", filas_compartidas(m))   # [(0, 1), (0, 2), (1, 2)]
+
+# Corrección: crear la fila DENTRO del bucle
+m = []
+for _ in range(3):
+    m.append([0, 0, 0])
+print("Filas compartidas:", filas_compartidas(m))   # []</pre></div></div></div>
+
+<h3 class="subtema"><span class="subnum">3.3</span>Patrón guardián para matrices vacías<span class="submin">6 min</span></h3>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-shield-halved c-blue"></i> Validar antes de recorrer</h3><p>Una matriz puede llegar vacía de dos formas: <code>[]</code> (sin filas) o <code>[[]]</code> (una fila sin columnas). En ambos casos <code>m[0][0]</code> rompe. El guardián se escribe al principio de la función y sale con <code>return</code>:</p>
+<div class="comparar"><div class="mal"><span>Insuficiente</span><code>if len(m) == 0:</code><small>no detecta <code>[[]]</code></small></div><div class="bien"><span>Completo</span><code>if not m or not m[0]:</code><small>detecta los dos casos</small></div></div>
+<p>El orden importa: <code>not m</code> va primero. Si <code>m</code> está vacía, Python ni siquiera evalúa <code>m[0]</code> (evaluación en cortocircuito).</p></div><aside class="docente"><div class="docente-tit"><i class="fa-solid fa-chalkboard-user"></i> Nota para el docente</div><p>Pedí que prueben <code>maximo_matriz([])</code> <b>sin</b> el guardián para que vean el error real. Después agregan la línea y vuelven a probar. Conectá con el Módulo 4: todos los ejercicios clave empiezan con un guardián.</p></aside></div><div class="col"><div class="win"><pre class="py" data-title="python — guardianes" data-run="1">def es_rectangular(m):
+    """Guardianes: no vacía y todas las filas del mismo largo."""
+    if not m or not m[0]:             # [] o [[]]
+        return False
+    columnas = len(m[0])
+    for fila in m:
+        if len(fila) != columnas:     # fila "dentada"
+            return False
+    return True
+
+def maximo_matriz(m):
+    if not es_rectangular(m):         # guardián: sale antes de fallar
+        return None
+    maximo = m[0][0]
+    for fila in m:
+        for x in fila:
+            if x &gt; maximo:
+                maximo = x
+    return maximo
+
+print(maximo_matriz([[3, 9], [4, 1]]))   # 9
+print(maximo_matriz([]))                 # None, en vez de IndexError
+print(maximo_matriz([[]]))               # None
+print(maximo_matriz([[1, 2], [3]]))      # None (no es rectangular)</pre></div></div></div>
+</section>
+<section id="m4" class="seccion">
+<header class="sec-head">
+  <div class="sec-tit"><i class="fa-solid fa-dumbbell"></i><h2>Módulo 4: Práctica progresiva (sin NumPy)</h2><span class="sec-sub">| De la cuadrícula al análisis de datos</span></div>
+  <div class="pills"><span class="pill"><i class="fa-regular fa-clock"></i> 40 min</span><span class="pill"><i class="fa-solid fa-laptop-code"></i> Práctica</span></div>
+</header>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-route c-blue"></i> Cómo usar esta práctica</h3><p>Los ejercicios suben de nivel y todos se resuelven con listas anidadas nativas. Cada uno tiene un editor para escribir y <b>ejecutar</b> tu solución, una pista y la solución explicada paso a paso. Probá siempre con una matriz <b>no cuadrada</b>.</p>
+<div class="niveles"><span class="badge b-basico"><i class="fa-solid fa-seedling"></i> Básico: 8'</span><span class="badge b-intermedio"><i class="fa-solid fa-layer-group"></i> Intermedio: 10'</span><span class="badge b-avanzado"><i class="fa-solid fa-rocket"></i> Avanzado: 10'</span><span class="badge b-dios"><i class="fa-solid fa-crown"></i> Nivel Dios: 12'</span></div></div></div>
+<div class="col"><aside class="docente"><div class="docente-tit"><i class="fa-solid fa-chalkboard-user"></i> Nota para el docente</div><p><b>Dinámica sugerida:</b> parejas con rol de “programador” y “revisor”, que se rotan en cada nivel. Resolvé en vivo <b>I1</b> (refuerza aliasing) y <b>A2</b> (la transpuesta suele trabar por las dimensiones invertidas). <b>D1</b> se puede hacer guiado en el pizarrón con la tabla de traza; <b>D2</b> queda como tarea si no llegan.</p>
+<p>Al circular, pedí que muestren su <code>[DEBUG]</code> con las dimensiones antes de dar ayuda.</p></aside></div></div>
+<h3 class="nivel-tit c-green"><i class="fa-solid fa-seedling"></i> Nivel básico: cuadrícula y modificación por coordenada</h3>
+<div class="ej-grid"><article class="ej n-basico" id="b1">
+  <div class="ej-head"><span class="ej-id">B1</span><h4>Imprimir en formato cuadrícula</h4><span class="badge b-basico"><i class="fa-solid fa-seedling"></i> Básico</span></div>
+  <div class="ej-enun"><p>Mostrá la matriz como una cuadrícula, con los números alineados en columnas, y debajo indicá sus dimensiones. No uses <code>print(matriz)</code> ni <code>print(fila)</code>.</p></div><div class="salida-esp"><span>Salida esperada</span><pre>    1   25    3
+  140    5   66
+    7    8    9
+Dimensión: 3x3</pre></div>
+  <div class="practica"><div class="practica-bar"><span><i class="fa-solid fa-keyboard"></i> Tu solución</span><span class="practica-btns"><button class="btn-sec js-reset">Restaurar</button><button class="btn-run js-run-ej"><i class="fa-solid fa-play"></i> Ejecutar</button></span></div>
+  <textarea class="editor" spellcheck="false" data-start="matriz = [
+    [1, 25, 3],
+    [140, 5, 66],
+    [7, 8, 9],
+]
+">matriz = [
+    [1, 25, 3],
+    [140, 5, 66],
+    [7, 8, 9],
+]
+</textarea><pre class="consola" hidden></pre></div>
+  <details class="pista"><summary><i class="fa-regular fa-lightbulb"></i> Ver pista</summary><div><p><code>print(x, end="")</code> evita el salto de línea. Un f-string con ancho fijo, <code>f"{x:5}"</code>, alinea los números a la derecha en 5 caracteres.</p></div></details>
+  <details class="solucion"><summary><i class="fa-solid fa-key"></i> Ver solución explicada</summary><div><ol class="pasos"><li>Recorré por elementos: <code>for fila in matriz</code> y adentro <code>for x in fila</code>.</li><li>Imprimí cada valor con <code>f"{x:5}"</code> y <code>end=""</code> para quedarte en la misma línea.</li><li>Al terminar el bucle interno, un <code>print()</code> vacío produce el salto de línea de la fila.</li><li>Dimensiones: <code>len(matriz)</code> filas y <code>len(matriz[0])</code> columnas.</li></ol><div class="win"><pre class="py" data-title="python — solución B1" data-run="1">matriz = [
+    [1, 25, 3],
+    [140, 5, 66],
+    [7, 8, 9],
+]
+for fila in matriz:
+    for x in fila:
+        print(f"{x:5}", end="")    # ancho fijo de 5, sin salto
+    print()                         # fin de la fila
+print(f"Dimensión: {len(matriz)}x{len(matriz[0])}")</pre></div></div></details>
+</article><article class="ej n-basico" id="b2">
+  <div class="ej-head"><span class="ej-id">B2</span><h4>Reservar butacas por coordenada</h4><span class="badge b-basico"><i class="fa-solid fa-seedling"></i> Básico</span></div>
+  <div class="ej-enun"><p>Una sala de cine tiene 3 filas y 4 butacas por fila, todas libres (<code>"L"</code>). Reservá (<code>"X"</code>) las butacas de las coordenadas de la lista <code>pedidos</code>. Si una coordenada no existe o ya está ocupada, informalo en vez de romper el programa. Mostrá la sala al final.</p></div><div class="salida-esp"><span>Salida esperada</span><pre>(0, 0): reservada
+(1, 2): reservada
+(5, 1): esa butaca no existe
+(1, 2): ya está ocupada
+X L L L
+L L X L
+L L L L</pre></div>
+  <div class="practica"><div class="practica-bar"><span><i class="fa-solid fa-keyboard"></i> Tu solución</span><span class="practica-btns"><button class="btn-sec js-reset">Restaurar</button><button class="btn-run js-run-ej"><i class="fa-solid fa-play"></i> Ejecutar</button></span></div>
+  <textarea class="editor" spellcheck="false" data-start="sala = [["L"] * 4 for _ in range(3)]
+pedidos = [(0, 0), (1, 2), (5, 1), (1, 2)]
+">sala = [["L"] * 4 for _ in range(3)]
+pedidos = [(0, 0), (1, 2), (5, 1), (1, 2)]
+</textarea><pre class="consola" hidden></pre></div>
+  <details class="pista"><summary><i class="fa-regular fa-lightbulb"></i> Ver pista</summary><div><p>Cada pedido es una tupla <code>(fila, col)</code>: se desarma con <code>for f, c in pedidos</code>. La coordenada es válida si <code>0 &lt;= f &lt; len(sala)</code> y <code>0 &lt;= c &lt; len(sala[0])</code>.</p></div></details>
+  <details class="solucion"><summary><i class="fa-solid fa-key"></i> Ver solución explicada</summary><div><ol class="pasos"><li>La sala se crea con comprensión para que cada fila sea independiente (¡nada de <code>[["L"] * 4] * 3</code>!).</li><li>Recorré los pedidos desarmando cada tupla en <code>f</code> y <code>c</code>.</li><li>Primer guardián: coordenada fuera de rango → aviso y <code>continue</code>.</li><li>Segundo guardián: butaca ya ocupada → aviso y <code>continue</code>.</li><li>Si pasó los dos, <code>sala[f][c] = "X"</code>.</li></ol><div class="win"><pre class="py" data-title="python — solución B2" data-run="1">sala = [["L"] * 4 for _ in range(3)]
+pedidos = [(0, 0), (1, 2), (5, 1), (1, 2)]
+
+for f, c in pedidos:
+    if not (0 &lt;= f &lt; len(sala) and 0 &lt;= c &lt; len(sala[0])):   # guardián 1
+        print(f"({f}, {c}): esa butaca no existe")
+        continue
+    if sala[f][c] == "X":                                      # guardián 2
+        print(f"({f}, {c}): ya está ocupada")
+        continue
+    sala[f][c] = "X"
+    print(f"({f}, {c}): reservada")
+
+for fila in sala:
+    print(" ".join(fila))</pre></div></div></details>
+</article></div>
+<h3 class="nivel-tit c-orange"><i class="fa-solid fa-layer-group"></i> Nivel intermedio: inicialización dinámica y promedios por fila</h3>
+<div class="ej-grid"><article class="ej n-intermedio" id="i1">
+  <div class="ej-head"><span class="ej-id">I1</span><h4>Matrices de ceros, unos e identidad</h4><span class="badge b-intermedio"><i class="fa-solid fa-layer-group"></i> Intermedio</span></div>
+  <div class="ej-enun"><p>Escribí una función <code>crear_matriz(filas, columnas, valor)</code> que construya la matriz <b>con bucles</b> (sin <code>* filas</code> sobre la lista exterior). Usala para crear una matriz 2x3 de ceros y una 3x2 de unos. Después armá la <b>identidad</b> de 4x4 (unos en la diagonal, ceros en el resto) y verificá que las filas no estén compartidas.</p></div>
+  <div class="practica"><div class="practica-bar"><span><i class="fa-solid fa-keyboard"></i> Tu solución</span><span class="practica-btns"><button class="btn-sec js-reset">Restaurar</button><button class="btn-run js-run-ej"><i class="fa-solid fa-play"></i> Ejecutar</button></span></div>
+  <textarea class="editor" spellcheck="false" data-start="def crear_matriz(filas, columnas, valor):
+    pass  # completá
+">def crear_matriz(filas, columnas, valor):
+    pass  # completá
+</textarea><pre class="consola" hidden></pre></div>
+  <details class="pista"><summary><i class="fa-regular fa-lightbulb"></i> Ver pista</summary><div><p>Dentro de la función, un bucle de filas que en cada vuelta crea una fila <b>nueva</b>. Para la identidad: partí de una matriz de ceros y recorré con un solo bucle poniendo <code>m[i][i] = 1</code>.</p></div></details>
+  <details class="solucion"><summary><i class="fa-solid fa-key"></i> Ver solución explicada</summary><div><ol class="pasos"><li>Guardián: si <code>filas</code> o <code>columnas</code> no son positivos, devolvé <code>[]</code>.</li><li>Bucle externo de filas: en cada vuelta creá <code>fila = []</code> <b>dentro</b> del bucle.</li><li>Bucle interno: <code>fila.append(valor)</code> tantas veces como columnas; al final <code>m.append(fila)</code>.</li><li>Identidad: <code>crear_matriz(4, 4, 0)</code> y luego <code>for i in range(4): m[i][i] = 1</code>.</li><li>Si las filas fueran compartidas, la identidad saldría llena de unos: es una prueba natural del aliasing.</li></ol><div class="win"><pre class="py" data-title="python — solución I1" data-run="1">def crear_matriz(filas, columnas, valor):
+    if filas &lt;= 0 or columnas &lt;= 0:       # guardián
+        return []
+    m = []
+    for _ in range(filas):
+        fila = []                         # fila NUEVA en cada vuelta
+        for _ in range(columnas):
+            fila.append(valor)
+        m.append(fila)
+    return m
+
+def mostrar(m):
+    for fila in m:
+        print(" ".join(str(x) for x in fila))
+    print()
+
+ceros = crear_matriz(2, 3, 0)
+unos = crear_matriz(3, 2, 1)
+mostrar(ceros)
+mostrar(unos)
+
+identidad = crear_matriz(4, 4, 0)
+for i in range(len(identidad)):
+    identidad[i][i] = 1                   # diagonal principal
+mostrar(identidad)
+print("¿Fila 0 y 1 compartidas?", identidad[0] is identidad[1])   # False</pre></div></div></details>
+</article><article class="ej n-intermedio" id="i2">
+  <div class="ej-head"><span class="ej-id">I2</span><h4>Promedio por fila (por alumno)</h4><span class="badge b-intermedio"><i class="fa-solid fa-layer-group"></i> Intermedio</span></div>
+  <div class="ej-enun"><p>Cada fila tiene las notas de un alumno y <code>nombres</code> está en el mismo orden. Calculá el promedio de cada alumno <b>sin usar <code>sum()</code></b>, guardalos en una lista e indicá si aprueba (promedio ≥ 4). Contemplá una fila vacía.</p></div><div class="salida-esp"><span>Salida esperada</span><pre>Ana: 8.00 -&gt; aprueba
+Luis: 4.00 -&gt; aprueba
+Sofía: 9.00 -&gt; aprueba
+Tomás: sin notas cargadas
+[8.0, 4.0, 9.0, None]</pre></div>
+  <div class="practica"><div class="practica-bar"><span><i class="fa-solid fa-keyboard"></i> Tu solución</span><span class="practica-btns"><button class="btn-sec js-reset">Restaurar</button><button class="btn-run js-run-ej"><i class="fa-solid fa-play"></i> Ejecutar</button></span></div>
+  <textarea class="editor" spellcheck="false" data-start="nombres = ["Ana", "Luis", "Sofía", "Tomás"]
+notas = [
+    [7, 8, 9],
+    [4, 3, 5],
+    [10, 9, 8],
+    [],
+]
+">nombres = ["Ana", "Luis", "Sofía", "Tomás"]
+notas = [
+    [7, 8, 9],
+    [4, 3, 5],
+    [10, 9, 8],
+    [],
+]
+</textarea><pre class="consola" hidden></pre></div>
+  <details class="pista"><summary><i class="fa-regular fa-lightbulb"></i> Ver pista</summary><div><p>Mismo esqueleto que la suma por filas del Módulo 2: el acumulador se reinicia en cada fila. Para relacionar nombre y fila, recorré con <code>for i in range(len(notas))</code>.</p></div></details>
+  <details class="solucion"><summary><i class="fa-solid fa-key"></i> Ver solución explicada</summary><div><ol class="pasos"><li>Recorré las filas por índice para usar <code>nombres[i]</code> y <code>notas[i]</code> juntos.</li><li>Guardián por fila: si <code>len(notas[i]) == 0</code>, registrá <code>None</code>, avisá y pasá a la siguiente con <code>continue</code> (evita <code>ZeroDivisionError</code>).</li><li>Acumulá con un bucle interno y dividí por <code>len(notas[i])</code>.</li><li>Guardá el promedio en la lista y mostralo con <code>:.2f</code>.</li></ol><div class="tabla-wrap"><table class="tabla traza"><thead><tr><th>i</th><th>nombre</th><th>fila</th><th>suma</th><th>promedio</th><th>¿aprueba?</th></tr></thead><tbody><tr><td>0</td><td>Ana</td><td>[7, 8, 9]</td><td>24</td><td>8.00</td><td>sí</td></tr><tr><td>1</td><td>Luis</td><td>[4, 3, 5]</td><td>12</td><td>4.00</td><td>sí</td></tr><tr><td>2</td><td>Sofía</td><td>[10, 9, 8]</td><td>27</td><td>9.00</td><td>sí</td></tr><tr><td>3</td><td>Tomás</td><td>[]</td><td>—</td><td>None</td><td>sin notas</td></tr></tbody></table></div><div class="win"><pre class="py" data-title="python — solución I2" data-run="1">nombres = ["Ana", "Luis", "Sofía", "Tomás"]
+notas = [
+    [7, 8, 9],
+    [4, 3, 5],
+    [10, 9, 8],
+    [],
+]
+promedios = []
+for i in range(len(notas)):
+    if len(notas[i]) == 0:                 # guardián: fila vacía
+        promedios.append(None)
+        print(f"{nombres[i]}: sin notas cargadas")
+        continue
+    suma = 0                               # se reinicia por alumno
+    for nota in notas[i]:
+        suma += nota
+    promedio = suma / len(notas[i])
+    promedios.append(promedio)
+    estado = "aprueba" if promedio &gt;= 4 else "no aprueba"
+    print(f"{nombres[i]}: {promedio:.2f} -&gt; {estado}")
+print(promedios)</pre></div></div></details>
+</article></div>
+<h3 class="nivel-tit c-red"><i class="fa-solid fa-rocket"></i> Nivel avanzado: suma de matrices y transpuesta</h3>
+<div class="ej-grid"><article class="ej n-avanzado" id="a1">
+  <div class="ej-head"><span class="ej-id">A1</span><h4>Suma de dos matrices</h4><span class="badge b-avanzado"><i class="fa-solid fa-rocket"></i> Avanzado</span></div>
+  <div class="ej-enun"><p>Escribí <code>sumar_matrices(a, b)</code> que devuelva una matriz <b>nueva</b> con la suma elemento a elemento. Si las dimensiones no coinciden (o alguna está vacía), devolvé <code>None</code>. Las matrices originales no deben modificarse.</p></div><div class="salida-esp"><span>Salida esperada</span><pre>[[11, 22, 33], [44, 55, 66]]
+None
+[[1, 2, 3], [4, 5, 6]]</pre></div>
+  <div class="practica"><div class="practica-bar"><span><i class="fa-solid fa-keyboard"></i> Tu solución</span><span class="practica-btns"><button class="btn-sec js-reset">Restaurar</button><button class="btn-run js-run-ej"><i class="fa-solid fa-play"></i> Ejecutar</button></span></div>
+  <textarea class="editor" spellcheck="false" data-start="a = [[1, 2, 3], [4, 5, 6]]
+b = [[10, 20, 30], [40, 50, 60]]
+">a = [[1, 2, 3], [4, 5, 6]]
+b = [[10, 20, 30], [40, 50, 60]]
+</textarea><pre class="consola" hidden></pre></div>
+  <details class="pista"><summary><i class="fa-regular fa-lightbulb"></i> Ver pista</summary><div><p>La celda <code>c[i][j]</code> es <code>a[i][j] + b[i][j]</code>. Construí <code>c</code> fila por fila con <code>append()</code>.</p></div></details>
+  <details class="solucion"><summary><i class="fa-solid fa-key"></i> Ver solución explicada</summary><div><ol class="pasos"><li>Guardián 1: ninguna vacía (<code>not a or not a[0]</code>, ídem <code>b</code>).</li><li>Guardián 2: mismas filas (<code>len(a) == len(b)</code>) y mismas columnas (<code>len(a[0]) == len(b[0])</code>).</li><li>Recorré por índices: para cada <code>i</code>, creá <code>fila = []</code> y agregá <code>a[i][j] + b[i][j]</code> para cada <code>j</code>.</li><li>Agregá la fila a <code>c</code> y devolvé <code>c</code>. Como es una matriz nueva, <code>a</code> y <code>b</code> quedan intactas.</li></ol><div class="win"><pre class="py" data-title="python — solución A1" data-run="1">def sumar_matrices(a, b):
+    if not a or not a[0] or not b or not b[0]:          # guardián 1
+        return None
+    if len(a) != len(b) or len(a[0]) != len(b[0]):      # guardián 2
+        return None
+    c = []
+    for i in range(len(a)):
+        fila = []
+        for j in range(len(a[0])):
+            fila.append(a[i][j] + b[i][j])
+        c.append(fila)
+    return c
+
+a = [[1, 2, 3], [4, 5, 6]]
+b = [[10, 20, 30], [40, 50, 60]]
+print(sumar_matrices(a, b))            # [[11, 22, 33], [44, 55, 66]]
+print(sumar_matrices(a, [[1, 2]]))     # None: dimensiones distintas
+print(a)                               # intacta</pre></div></div></details>
+</article><article class="ej n-avanzado" id="a2">
+  <div class="ej-head"><span class="ej-id">A2</span><h4>Matriz transpuesta</h4><span class="badge b-avanzado"><i class="fa-solid fa-rocket"></i> Avanzado</span></div>
+  <div class="ej-enun"><p>Calculá la <b>transpuesta</b> de una matriz: las filas pasan a ser columnas. Si la original es de 2x3, la transpuesta es de 3x2. Resolvelo con bucles y después con comprensión de listas.</p></div><div class="salida-esp"><span>Salida esperada</span><pre>[[1, 4], [2, 5], [3, 6]]
+2x3 -&gt; 3x2
+True
+True</pre></div>
+  <div class="practica"><div class="practica-bar"><span><i class="fa-solid fa-keyboard"></i> Tu solución</span><span class="practica-btns"><button class="btn-sec js-reset">Restaurar</button><button class="btn-run js-run-ej"><i class="fa-solid fa-play"></i> Ejecutar</button></span></div>
+  <textarea class="editor" spellcheck="false" data-start="m = [
+    [1, 2, 3],
+    [4, 5, 6],
+]
+">m = [
+    [1, 2, 3],
+    [4, 5, 6],
+]
+</textarea><pre class="consola" hidden></pre></div>
+  <details class="pista"><summary><i class="fa-regular fa-lightbulb"></i> Ver pista</summary><div><p>La regla es <code>t[j][i] = m[i][j]</code>. Ojo: la transpuesta tiene <code>len(m[0])</code> filas y <code>len(m)</code> columnas. Cada fila de la transpuesta es una <b>columna</b> de la original.</p></div></details>
+  <details class="solucion"><summary><i class="fa-solid fa-key"></i> Ver solución explicada</summary><div><ol class="pasos"><li>Guardián para matriz vacía.</li><li>El bucle <b>externo</b> recorre las columnas de <code>m</code> (<code>j</code>): cada una genera una fila de <code>t</code>.</li><li>El bucle <b>interno</b> recorre las filas de <code>m</code> (<code>i</code>) y agrega <code>m[i][j]</code>.</li><li>Es el mismo recorrido que la suma por columnas, pero en vez de sumar, guarda los valores.</li><li>Comprobación: transponer dos veces devuelve la matriz original.</li></ol><div class="win"><pre class="py" data-title="python — solución A2" data-run="1">m = [
+    [1, 2, 3],
+    [4, 5, 6],
+]
+
+def transpuesta(m):
+    if not m or not m[0]:                  # guardián
+        return []
+    t = []
+    for j in range(len(m[0])):             # cada COLUMNA de m...
+        nueva_fila = []
+        for i in range(len(m)):            # ...recorrida de arriba a abajo
+            nueva_fila.append(m[i][j])
+        t.append(nueva_fila)               # ...es una FILA de t
+    return t
+
+t = transpuesta(m)
+print(t)                                    # [[1, 4], [2, 5], [3, 6]]
+print(f"{len(m)}x{len(m[0])} -&gt; {len(t)}x{len(t[0])}")
+
+# Misma idea con comprensión de listas
+t2 = [[m[i][j] for i in range(len(m))] for j in range(len(m[0]))]
+print(t2 == t)                              # True
+print(transpuesta(t) == m)                  # True: ida y vuelta</pre></div></div></details>
+</article></div>
+<h3 class="nivel-tit c-purple"><i class="fa-solid fa-crown"></i> Nivel Dios: punto silla y análisis multidimensional</h3>
+<div class="ej-grid dios"><article class="ej n-dios" id="d1">
+  <div class="ej-head"><span class="ej-id">D1</span><h4>Detección del punto silla</h4><span class="badge b-dios"><i class="fa-solid fa-crown"></i> Nivel Dios</span></div>
+  <div class="ej-enun"><p>Un <b>punto silla</b> es una celda que es el <b>mínimo de su fila</b> y, a la vez, el <b>máximo de su columna</b>. Escribí <code>puntos_silla(m)</code> que devuelva una lista con todos los puntos silla como <code>(fila, columna, valor)</code>. Probala con las dos matrices: la primera tiene uno y la segunda ninguno.</p></div><div class="salida-esp"><span>Salida esperada</span><pre>[DEBUG] min_filas: [1, 7, 2] max_cols: [11, 7, 10]
+[(1, 1, 7)]
+[DEBUG] min_filas: [1, 0] max_cols: [3, 2]
+[]</pre></div>
+  <div class="practica"><div class="practica-bar"><span><i class="fa-solid fa-keyboard"></i> Tu solución</span><span class="practica-btns"><button class="btn-sec js-reset">Restaurar</button><button class="btn-run js-run-ej"><i class="fa-solid fa-play"></i> Ejecutar</button></span></div>
+  <textarea class="editor" spellcheck="false" data-start="m1 = [
+    [9, 1, 8],
+    [11, 7, 10],
+    [4, 2, 6],
+]
+m2 = [
+    [1, 2],
+    [3, 0],
+]
+">m1 = [
+    [9, 1, 8],
+    [11, 7, 10],
+    [4, 2, 6],
+]
+m2 = [
+    [1, 2],
+    [3, 0],
+]
+</textarea><pre class="consola" hidden></pre></div>
+  <details class="pista"><summary><i class="fa-regular fa-lightbulb"></i> Ver pista</summary><div><p>Dividí el problema: primero calculá una lista con el mínimo de cada fila y otra con el máximo de cada columna (como en el Módulo 2). Después, una celda es silla si <code>m[i][j] == min_filas[i] and m[i][j] == max_cols[j]</code>.</p></div></details>
+  <details class="solucion"><summary><i class="fa-solid fa-key"></i> Ver solución explicada</summary><div><ol class="pasos"><li>Guardián: matriz vacía → lista vacía.</li><li><b>Paso 1:</b> <code>min_filas</code>: para cada fila, el mínimo inicializado con su primer elemento.</li><li><b>Paso 2:</b> <code>max_cols</code>: bucles invertidos (afuera <code>j</code>), máximo inicializado con <code>m[0][j]</code>.</li><li><b>Paso 3:</b> recorré por índices y quedate con las celdas que cumplen las dos condiciones.</li><li>Precalcular las listas evita recalcular el mínimo de la fila en cada celda: es más eficiente y mucho más fácil de depurar.</li></ol><div class="tabla-wrap"><table class="tabla traza"><thead><tr><th></th><th>col 0</th><th>col 1</th><th>col 2</th><th>min_filas</th></tr></thead><tbody><tr><td>fila 0</td><td>9</td><td>1</td><td>8</td><td>1</td></tr><tr><td>fila 1</td><td>11</td><td><b>7</b></td><td>10</td><td><b>7</b></td></tr><tr><td>fila 2</td><td>4</td><td>2</td><td>6</td><td>2</td></tr><tr><td>max_cols</td><td>11</td><td><b>7</b></td><td>10</td><td>→ silla en (1, 1)</td></tr></tbody></table></div><div class="win"><pre class="py" data-title="python — solución D1" data-run="1">def puntos_silla(m):
+    if not m or not m[0]:                       # guardián
+        return []
+    filas, cols = len(m), len(m[0])
+
+    # Paso 1: mínimo de cada fila
+    min_filas = []
+    for i in range(filas):
+        minimo = m[i][0]
+        for j in range(1, cols):
+            if m[i][j] &lt; minimo:
+                minimo = m[i][j]
+        min_filas.append(minimo)
+
+    # Paso 2: máximo de cada columna (bucles invertidos)
+    max_cols = []
+    for j in range(cols):
+        maximo = m[0][j]
+        for i in range(1, filas):
+            if m[i][j] &gt; maximo:
+                maximo = m[i][j]
+        max_cols.append(maximo)
+
+    print("[DEBUG] min_filas:", min_filas, "max_cols:", max_cols)
+
+    # Paso 3: celdas que cumplen ambas condiciones
+    sillas = []
+    for i in range(filas):
+        for j in range(cols):
+            if m[i][j] == min_filas[i] and m[i][j] == max_cols[j]:
+                sillas.append((i, j, m[i][j]))
+    return sillas
+
+m1 = [
+    [9, 1, 8],
+    [11, 7, 10],
+    [4, 2, 6],
+]
+m2 = [
+    [1, 2],
+    [3, 0],
+]
+print(puntos_silla(m1))    # [(1, 1, 7)]
+print(puntos_silla(m2))    # []</pre></div></div></details>
+</article><article class="ej n-dios" id="d2">
+  <div class="ej-head"><span class="ej-id">D2</span><h4>Análisis de ventas por sucursal y día</h4><span class="badge b-dios"><i class="fa-solid fa-crown"></i> Nivel Dios</span></div>
+  <div class="ej-enun"><p>La matriz <code>ventas[s][d]</code> tiene las ventas (en miles) de 3 sucursales durante 5 días. Calculá: (1) total por sucursal, (2) total por día, (3) la sucursal y el día con más ventas, (4) la mejor venta individual con sus coordenadas y (5) para cada sucursal, los días en que vendió por encima de su propio promedio. Todo con bucles, sin <code>sum()</code> ni <code>max()</code>.</p></div>
+  <div class="practica"><div class="practica-bar"><span><i class="fa-solid fa-keyboard"></i> Tu solución</span><span class="practica-btns"><button class="btn-sec js-reset">Restaurar</button><button class="btn-run js-run-ej"><i class="fa-solid fa-play"></i> Ejecutar</button></span></div>
+  <textarea class="editor" spellcheck="false" data-start="sucursales = ["Centro", "Norte", "Sur"]
+dias = ["Lun", "Mar", "Mié", "Jue", "Vie"]
+ventas = [
+    [120, 95, 130, 110, 150],
+    [80, 105, 90, 115, 100],
+    [145, 60, 125, 135, 145],
+]
+">sucursales = ["Centro", "Norte", "Sur"]
+dias = ["Lun", "Mar", "Mié", "Jue", "Vie"]
+ventas = [
+    [120, 95, 130, 110, 150],
+    [80, 105, 90, 115, 100],
+    [145, 60, 125, 135, 145],
+]
+</textarea><pre class="consola" hidden></pre></div>
+  <details class="pista"><summary><i class="fa-regular fa-lightbulb"></i> Ver pista</summary><div><p>Es la integración de todo el Módulo 2: suma por filas (sucursales), suma por columnas (días), máximo de una lista con su posición y máximo de la matriz con coordenadas. Resolvé cada punto por separado y verificá con <code>print</code> antes de pasar al siguiente.</p></div></details>
+  <details class="solucion"><summary><i class="fa-solid fa-key"></i> Ver solución explicada</summary><div><ol class="pasos"><li>Guardián: matriz vacía.</li><li><b>Totales por sucursal</b> = suma por filas. <b>Totales por día</b> = suma por columnas (bucles invertidos).</li><li><b>Mejor sucursal / mejor día</b>: máximo de cada lista de totales, guardando el índice para mostrar el nombre.</li><li><b>Mejor venta individual</b>: máximo de la matriz con coordenadas <code>(s, d)</code>, inicializado con <code>ventas[0][0]</code>.</li><li><b>Sobre su promedio</b>: el promedio de la sucursal es su total dividido la cantidad de días; recorré su fila y guardá los nombres de los días que lo superan.</li><li>Escribí una función auxiliar <code>indice_del_maximo(lista)</code>: la usás dos veces y evitás repetir código.</li></ol><div class="win"><pre class="py" data-title="python — solución D2" data-run="1">sucursales = ["Centro", "Norte", "Sur"]
+dias = ["Lun", "Mar", "Mié", "Jue", "Vie"]
+ventas = [
+    [120, 95, 130, 110, 150],
+    [80, 105, 90, 115, 100],
+    [145, 60, 125, 135, 145],
+]
+
+def indice_del_maximo(lista):
+    pos = 0
+    for k in range(1, len(lista)):
+        if lista[k] &gt; lista[pos]:
+            pos = k
+    return pos
+
+if not ventas or not ventas[0]:                         # guardián
+    print("Sin datos de ventas")
+else:
+    S, D = len(ventas), len(ventas[0])
+
+    # 1) Total por sucursal (por filas)
+    tot_suc = []
+    for s in range(S):
+        acum = 0
+        for d in range(D):
+            acum += ventas[s][d]
+        tot_suc.append(acum)
+
+    # 2) Total por día (por columnas)
+    tot_dia = []
+    for d in range(D):
+        acum = 0
+        for s in range(S):
+            acum += ventas[s][d]
+        tot_dia.append(acum)
+
+    for s in range(S):
+        print(f"{sucursales[s]:&lt;7} total: {tot_suc[s]}")
+    print("Totales por día:", tot_dia)
+
+    # 3) Mejor sucursal y mejor día
+    ms = indice_del_maximo(tot_suc)
+    md = indice_del_maximo(tot_dia)
+    print(f"Mejor sucursal: {sucursales[ms]} ({tot_suc[ms]})")
+    print(f"Mejor día: {dias[md]} ({tot_dia[md]})")
+
+    # 4) Mejor venta individual con coordenadas
+    best, bs, bd = ventas[0][0], 0, 0
+    for s in range(S):
+        for d in range(D):
+            if ventas[s][d] &gt; best:
+                best, bs, bd = ventas[s][d], s, d
+    print(f"Mejor venta: {best} en {sucursales[bs]}, {dias[bd]} (fila {bs}, col {bd})")
+
+    # 5) Días sobre el promedio de cada sucursal
+    for s in range(S):
+        promedio = tot_suc[s] / D
+        buenos = []
+        for d in range(D):
+            if ventas[s][d] &gt; promedio:
+                buenos.append(dias[d])
+        print(f"{sucursales[s]} (prom. {promedio:.1f}): {buenos}")</pre></div></div></details>
+</article></div>
+</section>
+<section id="cierre" class="seccion">
+<header class="sec-head">
+  <div class="sec-tit"><i class="fa-solid fa-circle-check"></i><h2>Cierre: repaso relámpago</h2><span class="sec-sub">| ¿Qué imprime? Respondé y verificá</span></div>
+  <div class="pills"><span class="pill"><i class="fa-regular fa-clock"></i> 5 min</span><span class="pill"><i class="fa-solid fa-graduation-cap"></i> Resumen</span></div>
+</header>
+<div class="row2"><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-bolt c-blue"></i> ¿Qué imprime?</h3><div class="quiz"><div class="q" data-exp="Las dos filas son la misma lista: el cambio se ve en ambas."><div class="q-num">1</div><div class="q-body"><pre class="py q-code" data-run="0" data-bare="1">M = [[0] * 2] * 2
+M[0][0] = 1
+print(M)</pre><div class="q-ops"><button class="q-op" data-ok="0">[[1, 0], [0, 0]]</button><button class="q-op" data-ok="1">[[1, 0], [1, 0]]</button><button class="q-op" data-ok="0">[[1, 1], [0, 0]]</button><button class="q-op" data-ok="0">Error</button></div><p class="q-fb" aria-live="polite"></p></div></div><div class="q" data-exp="len(m) cuenta filas (2); len(m[0]) cuenta columnas (3)."><div class="q-num">2</div><div class="q-body"><pre class="py q-code" data-run="0" data-bare="1">m = [[1, 2, 3], [4, 5, 6]]
+print(len(m), len(m[0]))</pre><div class="q-ops"><button class="q-op" data-ok="0">3 2</button><button class="q-op" data-ok="1">2 3</button><button class="q-op" data-ok="0">6 6</button><button class="q-op" data-ok="0">2 2</button></div><p class="q-fb" aria-live="polite"></p></div></div><div class="q" data-exp="Primero la fila (1), después la columna (0)."><div class="q-num">3</div><div class="q-body"><pre class="py q-code" data-run="0" data-bare="1">m = [[1, 2], [3, 4]]
+print(m[1][0])</pre><div class="q-ops"><button class="q-op" data-ok="0">2</button><button class="q-op" data-ok="1">3</button><button class="q-op" data-ok="0">[3, 4]</button><button class="q-op" data-ok="0">IndexError</button></div><p class="q-fb" aria-live="polite"></p></div></div><div class="q" data-exp="m[:] es una copia de toda la matriz; [1] toma su fila 1, no la columna."><div class="q-num">4</div><div class="q-body"><pre class="py q-code" data-run="0" data-bare="1">m = [[1, 2], [3, 4]]
+print(m[:][1])</pre><div class="q-ops"><button class="q-op" data-ok="0">[2, 4]</button><button class="q-op" data-ok="1">[3, 4]</button><button class="q-op" data-ok="0">[1, 3]</button><button class="q-op" data-ok="0">Error</button></div><p class="q-fb" aria-live="polite"></p></div></div><div class="q" data-exp="Reasignar x no modifica la matriz: hay que usar fila[j] = 0."><div class="q-num">5</div><div class="q-body"><pre class="py q-code" data-run="0" data-bare="1">m = [[1, 2], [3, 4]]
+for fila in m:
+    for x in fila:
+        x = 0
+print(m)</pre><div class="q-ops"><button class="q-op" data-ok="0">[[0, 0], [0, 0]]</button><button class="q-op" data-ok="1">[[1, 2], [3, 4]]</button><button class="q-op" data-ok="0">[[0, 2], [0, 4]]</button><button class="q-op" data-ok="0">Error</button></div><p class="q-fb" aria-live="polite"></p></div></div><div class="q" data-exp="En listas nativas no existe m[1, 0] (eso es sintaxis de NumPy): se escribe m[1][0]."><div class="q-num">6</div><div class="q-body"><pre class="py q-code" data-run="0" data-bare="1">m = [[1, 2], [3, 4]]
+print(m[1, 0])</pre><div class="q-ops"><button class="q-op" data-ok="0">3</button><button class="q-op" data-ok="0">[3]</button><button class="q-op" data-ok="1">TypeError</button><button class="q-op" data-ok="0">None</button></div><p class="q-fb" aria-live="polite"></p></div></div></div><p class="q-score" id="q-score">Respondidas: 0 de 6</p></div></div><div class="col"><div class="card"><h3 class="card-tit"><i class="fa-solid fa-book c-blue"></i> ¿Qué aprendimos hoy?</h3><div class="tiles t2"><div class="tile t-blue"><div class="tile-tit"><i class="fa-solid fa-check"></i> Matriz nativa</div><p>Lista de listas. <code>len(m)</code> filas, <code>len(m[0])</code> columnas.</p></div><div class="tile t-green"><div class="tile-tit"><i class="fa-solid fa-check"></i> Acceso</div><p><code>m[fila][columna]</code>: primero la fila. Nunca <code>m[f, c]</code>.</p></div><div class="tile t-orange"><div class="tile-tit"><i class="fa-solid fa-check"></i> Inicialización</div><p><code>[[0] * c for _ in range(f)]</code>, nunca <code>[[0] * c] * f</code>.</p></div><div class="tile t-purple"><div class="tile-tit"><i class="fa-solid fa-check"></i> Recorridos</div><p>Por índices para posiciones y cambios; por elementos para leer.</p></div></div></div><div class="card"><h3 class="card-tit"><i class="fa-solid fa-clipboard-check c-blue"></i> Checklist antes de entregar código</h3><ul class="lista-ok">
+<li>¿Probé con una matriz <b>no cuadrada</b>?</li>
+<li>¿Cada fila se creó por separado (sin <code>* filas</code>)?</li>
+<li>¿El acumulador se reinicia en el lugar correcto?</li>
+<li>¿Tengo guardián para <code>[]</code> y <code>[[]]</code>?</li>
+<li>¿Copié la matriz fila por fila si no quería modificar la original?</li>
+<li>¿Borré los <code>print("[DEBUG]")</code>?</li></ul></div><div class="card"><h3 class="card-tit"><i class="fa-solid fa-house-laptop c-blue"></i> Tarea</h3><p>Terminar <b>D2</b>. Extra: escribir <code>multiplicar_matrices(a, b)</code> con tres bucles anidados, validando que <code>len(a[0]) == len(b)</code>, y probarla con una matriz de 2x3 por una de 3x2.</p></div><aside class="docente"><div class="docente-tit"><i class="fa-solid fa-chalkboard-user"></i> Nota para el docente</div><p>Usá el “¿Qué imprime?” como ticket de salida individual (3 minutos). Si muchos fallan la pregunta 1 o la 4, abrí la próxima clase con el simulador de aliasing y el explorador de la matriz.</p></aside></div></div>
+</section>
+<footer class="pie"><span><i class="fa-solid fa-graduation-cap"></i> Programación en Python: Listas y matrices nativas</span><span class="firma">Lic. Santiago Mendoza, MSc.</span></footer>
+</main>
+</div>
+<button class="lanzador" id="lanzador" type="button" aria-expanded="false" aria-controls="cajon"><i class="fa-solid fa-terminal"></i> Consola Python</button>
+<div class="cajon" id="cajon" role="dialog" aria-label="Consola Python">
+  <div class="cab"><strong><i class="fa-solid fa-terminal c-green"></i> Consola Python</strong><button class="btn-mini" id="cerrarCajon" type="button">Cerrar</button></div>
+  <div id="consolaLibre"></div>
+</div>
+<script type="text/python">
+from browser import window
+import sys
+
+class _Salida:
+    def __init__(self):
+        self.partes = []
+    def write(self, s):
+        self.partes.append(str(s))
+    def flush(self):
+        pass
+
+def _ejecutar(codigo):
+    out = _Salida()
+    viejo_out, viejo_err = sys.stdout, sys.stderr
+    sys.stdout = out
+    sys.stderr = out
+    error = ""
+    linea = 0
+    try:
+        exec(codigo, {"__name__": "__main__"})
+    except BaseException as e:
+        error = type(e).__name__ + ": " + str(e)
+        try:
+            if isinstance(e, SyntaxError) and e.lineno:
+                linea = e.lineno
+            else:
+                tb = e.__traceback__
+                while tb is not None:
+                    if tb.tb_frame.f_code.co_filename in ("<string>", "exec"):
+                        linea = tb.tb_lineno
+                    tb = tb.tb_next
+        except Exception:
+            linea = 0
+    finally:
+        sys.stdout, sys.stderr = viejo_out, viejo_err
+    return [''.join(out.partes), error, linea]
+
+window.pyRun = _ejecutar
+
+class _Limite(BaseException):
+    pass
+
+def _linea_codigo(e):
+    try:
+        tb = e.__traceback__
+        ln = 0
+        while tb is not None:
+            if tb.tb_frame.f_code.co_filename == '<codigo>':
+                ln = tb.tb_lineno
+            tb = tb.tb_next
+        return ln
+    except Exception:
+        return 0
+
+def _consola(src, entradas):
+    out = []
+    feed = [str(x) for x in entradas]
+    cont = [0]
+    def _print(*args, sep=' ', end='\n', **kw):
+        cont[0] += 1
+        if cont[0] > 3000:
+            raise _Limite("El programa imprimió demasiadas líneas. ¿Hay un bucle infinito?")
+        out.append(str(sep).join(str(a) for a in args) + str(end))
+    def _input(prompt=''):
+        out.append(str(prompt))
+        if not feed:
+            raise _Limite("El programa pidió un dato más de los disponibles. Agregá líneas en «Datos de entrada».")
+        v = feed.pop(0)
+        out.append(v + '\n')
+        return v
+    ns = {'print': _print, 'input': _input, '__name__': '__main__'}
+    tipo = ''
+    err = ''
+    linea = 0
+    try:
+        exec(compile(src, '<codigo>', 'exec'), ns)
+    except _Limite as e:
+        tipo = 'Límite'
+        err = str(e)
+    except SyntaxError as e:
+        tipo = type(e).__name__
+        err = str(getattr(e, 'msg', e))
+        linea = getattr(e, 'lineno', 0) or 0
+    except BaseException as e:
+        tipo = type(e).__name__
+        err = str(e)
+        linea = _linea_codigo(e)
+    return [''.join(out), tipo, err, linea]
+
+window.pyConsola = _consola
+</script>
+<script>
+(function(){
+const KW=/\b(def|return|if|elif|else|for|while|in|not|and|or|is|import|from|as|with|break|continue|pass|None|True|False|del|try|except|lambda|global)\b/;
+const BI=/\b(print|len|range|list|sorted|sum|max|min|type|id|enumerate|str|int|float|input|open|round|set|copy)\b/;
+const RE=/(#[^\n]*)|(f?"(?:[^"\\\n]|\\.)*"|f?'(?:[^'\\\n]|\\.)*')|(^[ \t]*[A-Za-z_]\w*(?=[ \t]*(?:[+\-*\/]?=)(?!=)))|(\.[A-Za-z_]\w*(?=\())|\b(\d+(?:\.\d+)?)\b|\b([A-Za-z_]\w*)\b/gm;
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function hl(src){
+  let out="",last=0,m;RE.lastIndex=0;
+  while((m=RE.exec(src))){
+    out+=esc(src.slice(last,m.index));last=RE.lastIndex;
+    if(m[1])out+=`<span class="tok-c">${esc(m[1])}</span>`;
+    else if(m[2])out+=`<span class="tok-s">${esc(m[2])}</span>`;
+    else if(m[3]){const ws=m[3].match(/^[ \t]*/)[0];const id=m[3].slice(ws.length);
+      out+=ws+(KW.test(id)?`<span class="tok-k">${id}</span>`:`<span class="tok-v">${id}</span>`);}
+    else if(m[4])out+=`.<span class="tok-m">${esc(m[4].slice(1))}</span>`;
+    else if(m[5])out+=`<span class="tok-n">${m[5]}</span>`;
+    else if(m[6]){const w=m[6];out+=KW.test(w)&&w.match(KW)[0]===w?`<span class="tok-k">${w}</span>`:(BI.test(w)&&w.match(BI)[0]===w?`<span class="tok-b">${w}</span>`:w);}
+    if(m[0].length===0)RE.lastIndex++;
+  }
+  return out+esc(src.slice(last));
+}
+
+/* ---- Python runtime (Brython) ---- */
+let pyListo=false;const espera=[];
+function marcarListo(){pyListo=true;const e=document.getElementById("py-estado");if(e){e.classList.add("listo");e.querySelector("span:last-child").textContent="Python listo para ejecutar";}
+  document.querySelectorAll("[data-espera]").forEach(b=>{b.disabled=false;b.removeAttribute("data-espera");});espera.splice(0).forEach(f=>f());}
+window.__pyListo=marcarListo;
+function correr(src,cb){if(pyListo&&window.pyRun){cb(window.pyRun(src));}else{espera.push(()=>cb(window.pyRun(src)));}}
+
+const AYUDAS=[
+ [/pop from empty list|pop index out of range/i,"Hiciste pop() sobre una lista vacía. Protegelo con un guardián: if lista: ..."],
+ [/tuple/i,"Escribiste m[f, c], que es sintaxis de NumPy. Con listas anidadas se accede con m[f][c]."],
+ [/index out of range/i,"Accediste a una posición que no existe. En matrices: las filas van de 0 a len(m) - 1 y las columnas de 0 a len(m[0]) - 1. Revisá si intercambiaste los range() o si la matriz puede estar vacía."],
+ [/NoneType/i,"Una variable vale None. Casi siempre es por reasignar un método in-place: t = t.append(x) o t = t.sort(). Esos métodos devuelven None."],
+ [/can only concatenate list/i,"Con + solo podés unir lista + lista. Envolvé el valor entre corchetes: t + [x]."],
+ [/not in list/i,"remove() o index() no encontraron ese valor. Verificá antes con: if x in lista:"],
+ [/not supported between instances/i,"Estás comparando u ordenando tipos mezclados (por ejemplo str con int). Ordená listas de un solo tipo."],
+ [/does not support item assignment/i,"Ese tipo es inmutable (str o tuple): no se puede cambiar un elemento por índice. Las listas sí lo permiten."],
+ [/ZeroDivisionError|division by zero/i,"Dividiste por cero: seguramente len() de una lista vacía. Agregá un guardián antes de dividir."],
+ [/NameError/i,"Usaste un nombre que no existe todavía: revisá cómo lo escribiste y que esté definido antes de usarlo."],
+ [/IndentationError|SyntaxError/i,"Error de sintaxis: revisá los dos puntos (:) al final de if/for/def, los paréntesis y la sangría."]
+];
+function pintarSalida(pre,res){
+  pre.hidden=false;pre.innerHTML="";
+  let [out,err,linea]=res&&res.length?[res[0],res[1],res[2]]:["","",0];
+  if(out)pre.append(document.createTextNode(out));
+  if(err){const s=document.createElement("span");s.className="err";s.textContent=(linea?`Línea ${linea} → `:"")+err;pre.append(s);
+    const a=AYUDAS.find(([r])=>r.test(err));if(a){const h=document.createElement("span");h.className="ayuda";h.textContent="💡 "+a[1];pre.append(h);}}
+  if(!out&&!err){const s=document.createElement("span");s.className="meta";s.textContent="(el programa no imprimió nada)";pre.append(s);}
+}
+
+/* ---- code windows ---- */
+document.querySelectorAll("pre.py").forEach(pre=>{
+  const src=pre.textContent;pre.innerHTML=hl(src);
+  if(pre.dataset.bare)return;
+  const win=pre.parentElement,bar=document.createElement("div");bar.className="win-bar";
+  bar.innerHTML=`<span class="d"></span><span class="d"></span><span class="d"></span><span class="titulo"></span>`;
+  bar.querySelector(".titulo").textContent=pre.dataset.title||"python";
+  const copiar=document.createElement("button");copiar.textContent="Copiar";copiar.type="button";
+  copiar.onclick=()=>{const t=win.querySelector("textarea");const txt=t?t.value:src;
+    (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>{copiar.textContent="Copiado";setTimeout(()=>copiar.textContent="Copiar",1200)}).catch(()=>{copiar.textContent="No se pudo copiar"});};
+  bar.append(copiar);
+  if(pre.dataset.run==="1"){
+    const ed=document.createElement("button");ed.textContent="Editar";ed.type="button";
+    const run=document.createElement("button");run.className="run";run.type="button";run.innerHTML='<i class="fa-solid fa-play"></i> Ejecutar';
+    const salida=document.createElement("pre");salida.className="consola";salida.hidden=true;
+    ed.onclick=()=>{let t=win.querySelector("textarea");
+      if(t){pre.innerHTML=hl(t.value);t.replaceWith(pre);ed.textContent="Editar";}
+      else{t=document.createElement("textarea");t.spellcheck=false;t.value=pre.dataset.cur||src;t.rows=Math.min(24,src.split("\n").length+1);t.setAttribute("aria-label","Editor de código");pre.replaceWith(t);t.focus();ed.textContent="Ver resaltado";
+        t.addEventListener("input",()=>pre.dataset.cur=t.value);t.addEventListener("keydown",tabular);}
+    };
+    run.onclick=()=>{const t=win.querySelector("textarea");const code=t?t.value:(pre.dataset.cur||src);
+      run.disabled=true;run.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Ejecutando';
+      setTimeout(()=>correr(code,r=>{pintarSalida(salida,r);run.disabled=false;run.innerHTML='<i class="fa-solid fa-play"></i> Ejecutar';}),30);};
+    bar.append(ed,run);win.append(salida);
+  }
+  win.prepend(bar);
+});
+function tabular(e){if(e.key==="Tab"&&!e.shiftKey){e.preventDefault();const t=e.target,s=t.selectionStart;t.setRangeText("    ",s,t.selectionEnd,"end");}}
+
+/* ---- exercise editors ---- */
+document.querySelectorAll(".practica").forEach(p=>{
+  const ta=p.querySelector("textarea"),out=p.querySelector(".consola"),key="ej:"+p.closest(".ej").id;
+  try{const g=localStorage.getItem(key);if(g)ta.value=g;}catch(e){}
+  ta.addEventListener("keydown",tabular);
+  ta.addEventListener("input",()=>{try{localStorage.setItem(key,ta.value)}catch(e){}});
+  p.querySelector(".js-reset").onclick=()=>{ta.value=ta.dataset.start;try{localStorage.removeItem(key)}catch(e){};out.hidden=true;};
+  const run=p.querySelector(".js-run-ej");
+  run.onclick=()=>{run.disabled=true;setTimeout(()=>correr(ta.value,r=>{pintarSalida(out,r);run.disabled=false;}),30);};
+});
+
+/* ---- alias simulator ---- */
+const al=document.getElementById("alias");
+if(al){let modo="alias",a=[1,2,3],b=a,ult=null;const mem=al.querySelector(".alias-mem"),msg=al.querySelector(".alias-msg");
+  const caja=(arr,etqs,id)=>`<div class="obj"><div class="etqs">${etqs.map(e=>`<span class="etq">${e}</span>`).join("")}</div><div class="caja">${arr.map((v,i)=>`<span class="${v===99&&i===arr.length-1&&ult?"nuevo":""}">${v}</span>`).join("")}</div><small>id: ${id}</small></div>`;
+  function render(){
+    if(a===b)mem.innerHTML=caja(a,["a","b"],"140321");
+    else mem.innerHTML=caja(a,["a"],"140321")+caja(b,["b"],"140877");
+    if(!ult)msg.innerHTML=modo==="alias"?"<b>b = a</b>: hay <b>un solo objeto</b> con dos etiquetas. <code>a is b</code> → True.":"<b>b = a.copy()</b>: hay <b>dos objetos</b> distintos con el mismo contenido. <code>a is b</code> → False.";
+    else msg.innerHTML=modo==="alias"?`Después de <code>b.append(99)</code>: <code>print(a)</code> → <b>[${a.join(", ")}]</b>. ¡Cambió a, aunque nunca la tocamos!`:`Después de <code>b.append(99)</code>: <code>print(a)</code> → <b>[${a.join(", ")}]</b>. a quedó intacta.`;
+  }
+  function reset(){a=[1,2,3];b=modo==="alias"?a:a.slice();ult=null;render();}
+  al.querySelectorAll("[data-modo]").forEach(btn=>btn.onclick=()=>{modo=btn.dataset.modo;al.querySelectorAll("[data-modo]").forEach(x=>x.classList.toggle("on",x===btn));reset();});
+  al.querySelector('[data-acc="append"]').onclick=()=>{b.push(99);ult=true;render();};
+  al.querySelector('[data-acc="reset"]').onclick=reset;reset();}
+
+/* ---- slicer ---- */
+const sl=document.getElementById("slicer");
+if(sl){const L=[10,20,30,40,50,60],n=L.length;const ini=sl.querySelector("#s-ini"),fin=sl.querySelector("#s-fin"),paso=sl.querySelector("#s-paso");
+  const cel=sl.querySelector(".slicer-celdas"),res=sl.querySelector(".slicer-res");
+  const num=v=>{v=v.trim();if(v==="")return null;if(!/^-?\d+$/.test(v))return NaN;return parseInt(v,10);};
+  function idx(st,sp,sv){ // CPython slice.indices
+    const step=sv===null?1:sv;const lo=step>0?0:-1,hi=step>0?n:n-1;
+    const fix=(v,d)=>{if(v===null)return d;if(v<0){v+=n;if(v<lo)v=lo;}else if(v>hi)v=hi;return v;};
+    const s=fix(st,step>0?lo:hi),e=fix(sp,step>0?hi:lo);const out=[];
+    if(step>0)for(let i=s;i<e;i+=step)out.push(i);else for(let i=s;i>e;i+=step)out.push(i);return out;}
+  function render(){const s=num(ini.value),e=num(fin.value),p=num(paso.value);
+    let elegidos=[],error="";
+    if([s,e,p].some(Number.isNaN))error="Solo números enteros (o vacío).";else if(p===0)error="ValueError: slice step cannot be zero";else elegidos=idx(s,e,p);
+    cel.innerHTML=L.map((v,i)=>{const o=elegidos.indexOf(i);return `<div class="celda ${o>=0?"sel":""}">${o>=0?`<span class="ord">${o+1}</span>`:""}<b>${v}</b><small>${i}</small><small style="color:var(--red)">${i-n}</small></div>`}).join("");
+    const expr=`numeros[${ini.value.trim()}:${fin.value.trim()}${paso.value.trim()!==""?":"+paso.value.trim():""}]`;
+    res.innerHTML=error?`<span class="err">${error}</span>`:`${expr} → [${elegidos.map(i=>L[i]).join(", ")}]`;}
+  [ini,fin,paso].forEach(x=>x.addEventListener("input",render));
+  sl.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{const [x,y,z]=b.dataset.p.split(",");ini.value=x;fin.value=y;paso.value=z;render();});
+  ini.value="1";fin.value="4";render();}
+
+/* ---- consola flotante (modelo Clase 9) ---- */
+const EXPLICA={
+  ValueError:"El valor tiene el tipo correcto pero un contenido que no sirve, como <code>int(\"abc\")</code>.",
+  ZeroDivisionError:"Se dividió por cero. En matrices suele pasar al promediar una fila vacía: agregá un guardián.",
+  TypeError:"Se operó con tipos incompatibles o se usó una sintaxis inválida. Si escribiste <code>m[f, c]</code>, eso es sintaxis de NumPy: con listas anidadas es <code>m[f][c]</code>.",
+  IndexError:"Se accedió a una posición que no existe. En matrices, las filas van de 0 a <code>len(m) - 1</code> y las columnas de 0 a <code>len(m[0]) - 1</code>. Revisá si intercambiaste los <code>range()</code>.",
+  KeyError:"Se buscó en un diccionario una clave que no existe.",
+  NameError:"Se usó una variable o función que no está definida: revisá cómo la escribiste y que esté asignada antes.",
+  UnboundLocalError:"Se usó una variable local antes de asignarle un valor dentro de la función.",
+  AttributeError:"Ese dato no tiene el método pedido. Si dice <code>NoneType</code>, probablemente reasignaste un método in-place: <code>t = t.append(x)</code>.",
+  AssertionError:"La condición de un <code>assert</code> resultó falsa.",
+  SyntaxError:"El código no respeta la sintaxis de Python. Revisá paréntesis, corchetes y comillas sin cerrar, y los dos puntos (<code>:</code>) al final de <code>if</code>, <code>for</code>, <code>while</code> y <code>def</code>.",
+  IndentationError:"La sangría no es coherente. Usá 4 espacios por nivel y alineá los bloques que van juntos.",
+  RecursionError:"Una función se llamó a sí misma demasiadas veces sin llegar a un caso base.",
+  ImportError:"Esta consola corre en el navegador: sólo puede importar módulos estándar (como <code>random</code> o <code>copy</code>). NumPy no está disponible, ¡y en esta clase tampoco se usa!",
+  ModuleNotFoundError:"Esta consola corre en el navegador: sólo puede importar módulos estándar (como <code>random</code> o <code>copy</code>). NumPy no está disponible, ¡y en esta clase tampoco se usa!",
+  "Límite":"La consola cortó la ejecución para que no se cuelgue."
+};
+function correrConsola(src,ents){const r=window.pyConsola(src,ents);return {salida:r[0],tipo:r[1],error:r[2],linea:r[3]};}
+function pintarConsola(host,r,ed){
+  host.innerHTML="";const term=document.createElement("div");term.className="terminal";
+  let t=r.salida?esc(r.salida):"";
+  if(r.tipo){if(t&&!t.endsWith("\n"))t+="\n";
+    t+='<span class="rojo">'+(r.tipo==="Límite"?esc(r.error):(r.linea?"Error en la línea "+r.linea+"\n":"")+esc(r.tipo)+(r.error?": "+esc(r.error):""))+"</span>";}
+  if(!t)t='<span class="tenue">(el programa no mostró nada)</span>';
+  term.innerHTML=t;host.appendChild(term);
+  if(r.tipo){const ex=document.createElement("div");ex.className="explica";
+    ex.innerHTML="<strong>"+esc(r.tipo==="Límite"?"Ejecución detenida":r.tipo)+".</strong> "+(EXPLICA[r.tipo]||"Error de ejecución.");host.appendChild(ex);
+    if(ed&&r.linea)ed.marcar(r.linea);}
+}
+function crearEditor(host,codigo,alEjecutar){
+  host.classList.add("ed");
+  host.innerHTML='<div class="gutter" aria-hidden="true"></div><div class="area"><pre class="capa" aria-hidden="true"><code></code></pre><textarea spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-label="Editor de código Python"></textarea></div>';
+  const ta=host.querySelector("textarea"),capa=host.querySelector(".capa"),cod=host.querySelector("code"),gut=host.querySelector(".gutter");
+  ta.value=codigo;let marcada=0;
+  function sync(){cod.innerHTML=hl(ta.value)+"\n";const n=ta.value.split("\n").length;let g="";
+    for(let i=1;i<=n;i++)g+="<span"+(i===marcada?' class="err"':"")+">"+i+"</span>";gut.innerHTML=g;
+    ta.style.height="auto";ta.style.height=(ta.scrollHeight+2)+"px";capa.scrollLeft=ta.scrollLeft;}
+  function insertar(txt){ta.focus();let ok=false;try{ok=document.execCommand("insertText",false,txt);}catch(e){}
+    if(!ok){ta.setRangeText(txt,ta.selectionStart,ta.selectionEnd,"end");marcada=0;sync();}}
+  ta.addEventListener("input",()=>{marcada=0;sync();});
+  ta.addEventListener("scroll",()=>{capa.scrollLeft=ta.scrollLeft;});
+  ta.addEventListener("keydown",ev=>{
+    if(ev.key==="Enter"&&(ev.ctrlKey||ev.metaKey)){ev.preventDefault();alEjecutar&&alEjecutar();return;}
+    const v=ta.value,s0=ta.selectionStart,e0=ta.selectionEnd,ini=v.lastIndexOf("\n",s0-1)+1;
+    if(ev.key==="Tab"){ev.preventDefault();
+      if(ev.shiftKey||s0!==e0){const bIdx=v.indexOf("\n",e0-(e0>s0&&v[e0-1]==="\n"?1:0));const b=bIdx===-1?v.length:bIdx;
+        const nuevo=v.slice(ini,b).split("\n").map(l=>ev.shiftKey?l.replace(/^ {1,4}/,""):"    "+l).join("\n");
+        ta.setSelectionRange(ini,b);insertar(nuevo);ta.setSelectionRange(ini,ini+nuevo.length);}
+      else insertar("    ");return;}
+    if(ev.key==="Enter"){ev.preventDefault();const linea=v.slice(ini,s0);let ind=(linea.match(/^ */)||[""])[0];
+      if(/:\s*(#.*)?$/.test(linea))ind+="    ";insertar("\n"+ind);return;}
+    if(ev.key==="Backspace"&&s0===e0&&s0>ini){const antes=v.slice(ini,s0);
+      if(/^ +$/.test(antes)&&antes.length%4===0){ev.preventDefault();ta.setSelectionRange(s0-4,s0);insertar("");}}
+  });
+  sync();
+  return {get:()=>ta.value,set:v=>{ta.value=v;marcada=0;sync();},marcar:n=>{marcada=n;sync();},foco:()=>ta.focus()};
+}
+function crearEntradas(host,valores,id){
+  const w=document.createElement("div");w.className="entradas";
+  w.innerHTML='<label for="ent-'+id+'">Datos de entrada para <code>input()</code>, uno por línea</label><textarea id="ent-'+id+'" spellcheck="false"></textarea>';
+  const t=w.querySelector("textarea");const fijar=vs=>{t.value=vs.join("\n");t.rows=Math.max(1,Math.min(5,vs.length||1));};fijar(valores);host.appendChild(w);
+  return {get:()=>t.value===""?[]:t.value.replace(/\n$/,"").split("\n"),set:fijar};
+}
+function crearConsola(host,codigo,entradas,id){
+  const edHost=document.createElement("div");host.appendChild(edHost);let ejecutar;
+  const ed=crearEditor(edHost,codigo,()=>ejecutar());const ent=crearEntradas(host,entradas,id);
+  const barra=document.createElement("div");barra.className="barra-acc";
+  barra.innerHTML='<button class="btn-c" type="button"><i class="fa-solid fa-play"></i> Ejecutar</button><button class="btn-c sec" type="button">Restaurar</button><span class="atajo">Ctrl + Enter ejecuta</span>';
+  host.appendChild(barra);
+  const sal=document.createElement("div");sal.className="consola-salida";sal.setAttribute("aria-live","polite");host.appendChild(sal);
+  const [bEj,bRe]=barra.querySelectorAll("button");let original={codigo,entradas};
+  ejecutar=()=>{const go=()=>pintarConsola(sal,correrConsola(ed.get(),ent.get()),ed);
+    if(pyListo&&window.pyConsola)go();else{sal.innerHTML='<div class="terminal"><span class="tenue">Preparando Python… se ejecuta al terminar.</span></div>';espera.push(go);}};
+  bEj.addEventListener("click",ejecutar);
+  bRe.addEventListener("click",()=>{ed.set(original.codigo);ent.set(original.entradas);sal.innerHTML="";});
+  return {cargar(c,e){original={codigo:c,entradas:e};ed.set(c);ent.set(e);sal.innerHTML="";},ejecutar,foco:ed.foco};
+}
+const cajon=document.getElementById("cajon"),lanzador=document.getElementById("lanzador");
+const libre=crearConsola(document.getElementById("consolaLibre"),
+ '# Escribí código Python y ejecutalo\nfilas = int(input("Filas: "))\ncolumnas = int(input("Columnas: "))\nm = [[0] * columnas for _ in range(filas)]\nfor fila in m:\n    print(fila)\n',["2","3"],"libre");
+function abrirCajon(){cajon.classList.add("abierto");lanzador.style.display="none";lanzador.setAttribute("aria-expanded","true");}
+function cerrarCajon(){cajon.classList.remove("abierto");lanzador.style.display="";lanzador.setAttribute("aria-expanded","false");lanzador.focus();}
+lanzador.addEventListener("click",()=>{abrirCajon();libre.foco();});
+document.getElementById("cerrarCajon").addEventListener("click",cerrarCajon);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&cajon.classList.contains("abierto"))cerrarCajon();});
+function probarEnConsola(codigo,entradas){libre.cargar(codigo,entradas||[]);abrirCajon();libre.ejecutar();}
+document.querySelectorAll(".win").forEach(win=>{const pre=win.querySelector("pre.py");
+  if(!pre||pre.dataset.run!=="1")return;
+  const b=document.createElement("button");b.type="button";b.className="btn-mini btn-probar";b.innerHTML='<i class="fa-solid fa-terminal"></i> Probar en la consola';
+  b.addEventListener("click",()=>{const t=win.querySelector("textarea");probarEnConsola(t?t.value:(pre.dataset.cur||pre.textContent),[]);});
+  win.insertAdjacentElement("afterend",b);});
+
+/* ---- explorador de matriz ---- */
+const mx=document.getElementById("mexp");
+if(mx){const M=[[1,2,3,4],[5,6,7,8],[9,10,11,12]];let vista="celda",ci=2,cj=1;const g=mx.querySelector(".mexp-grid"),r=mx.querySelector(".mexp-res");
+  function render(){let h='<span></span>'+M[0].map((_,j)=>`<span class="hdr">col ${j}</span>`).join("");
+    M.forEach((fila,i)=>{h+=`<span class="hdr">fila ${i}</span>`+fila.map((v,j)=>{let c="";
+      if(vista==="celda"&&i===ci&&j===cj)c="sel";else if(vista==="fila"&&i===ci)c=j===cj?"sel":"hl";else if(vista==="col"&&j===cj)c=i===ci?"sel":"hl";else if(vista==="diag"&&i===j)c="hl";
+      return `<button type="button" class="${c}" data-i="${i}" data-j="${j}" aria-label="fila ${i}, columna ${j}, valor ${v}">${v}</button>`}).join("")});
+    g.innerHTML=h;
+    if(vista==="celda")r.innerHTML=`matriz[${ci}][${cj}] → <b>${M[ci][cj]}</b>`;
+    else if(vista==="fila")r.innerHTML=`matriz[${ci}] → <b>[${M[ci].join(", ")}]</b>`;
+    else if(vista==="col")r.innerHTML=`columna ${cj}: [fila[${cj}] for fila in matriz] → <b>[${M.map(f=>f[cj]).join(", ")}]</b>`;
+    else r.innerHTML=`i == j → <b>[${[0,1,2].map(i=>M[i][i]).join(", ")}]</b><br><span style="font-family:inherit;color:var(--muted)">3x4 no es cuadrada: la “diagonal” solo toca 3 celdas</span>`;}
+  g.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ci=+b.dataset.i;cj=+b.dataset.j;render();});
+  mx.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{vista=b.dataset.v;mx.querySelectorAll("[data-v]").forEach(x=>x.classList.toggle("on",x===b));render();});
+  render();}
+
+/* ---- aliasing de matrices ---- */
+const ma=document.getElementById("malias");
+if(ma){let modo="mal",hecho=false;const mem=ma.querySelector(".malias-mem"),msg=ma.querySelector(".alias-msg");
+  function render(){const ids=modo==="mal"?["7001","7001","7001"]:["7001","7002","7003"];
+    let filas="";for(let i=0;i<3;i++){const cambia=hecho&&(modo==="mal"||i===0);
+      filas+=`<div class="mrow"><span class="etq">M[${i}]</span><div class="caja"><span class="${cambia?"cambio":""}">${cambia?5:0}</span><span>0</span><span>0</span></div><small>id ${ids[i]}</small></div>`;}
+    mem.innerHTML=`<div class="mrows">${filas}</div>`;
+    if(!hecho)msg.innerHTML=modo==="mal"?"Las tres filas tienen el <b>mismo id</b>: son una sola lista con tres nombres.":"Cada fila tiene <b>su propio id</b>: <code>[0] * 3</code> se evaluó tres veces.";
+    else msg.innerHTML=modo==="mal"?"<code>M[0][0] = 5</code> cambió <b>las tres filas</b>, porque son la misma.":"<code>M[0][0] = 5</code> cambió <b>solo la fila 0</b>.";}
+  ma.querySelectorAll("[data-modo]").forEach(b=>b.onclick=()=>{modo=b.dataset.modo;hecho=false;ma.querySelectorAll("[data-modo]").forEach(x=>x.classList.toggle("on",x===b));render();});
+  ma.querySelector('[data-acc="set"]').onclick=()=>{hecho=true;render();};
+  ma.querySelector('[data-acc="reset"]').onclick=()=>{hecho=false;render();};render();}
+
+/* ---- quiz ---- */
+let resp=0;const total=document.querySelectorAll(".q").length;
+document.querySelectorAll(".q").forEach(q=>{const fb=q.querySelector(".q-fb");
+  q.querySelectorAll(".q-op").forEach(b=>b.onclick=()=>{if(q.dataset.done)return;q.dataset.done=1;resp++;
+    const ok=b.dataset.ok==="1";b.classList.add(ok?"ok":"no");q.querySelector('[data-ok="1"]').classList.add("ok");
+    fb.textContent=(ok?"✔ Correcto. ":"✘ No. ")+q.dataset.exp;q.dataset.bien=ok?1:0;
+    const bien=document.querySelectorAll('.q[data-bien="1"]').length;
+    document.getElementById("q-score").textContent=`Respondidas: ${resp} de ${total} | Correctas: ${bien}`;});});
+
+/* ---- teacher mode ---- */
+const sw=document.getElementById("modo-docente");
+function aplicarModo(on){document.body.classList.toggle("alumno",!on);sw.checked=on;document.getElementById("modo-lbl").textContent=on?"Vista docente":"Vista alumno";}
+let docente=true;try{const g=localStorage.getItem("modo-docente");if(g!==null)docente=g==="1";}catch(e){}
+aplicarModo(docente);sw.onchange=()=>{aplicarModo(sw.checked);try{localStorage.setItem("modo-docente",sw.checked?"1":"0")}catch(e){}};
+
+/* ---- class timer ---- */
+const AG=[["apertura","Apertura",5],["m1","Módulo 1",35],["m2","Módulo 2",35],["pausa","Pausa",10],["m3","Módulo 3",20],["m4","Módulo 4",40],["cierre","Cierre",5]];
+const ul=document.getElementById("agenda");let acc=0;
+ul.innerHTML=AG.map(([id,t,m])=>{const d=acc;acc+=m;const f=x=>`${Math.floor(x/60)}:${String(x%60).padStart(2,"0")}`;return `<li><a href="#${id}" data-ini="${d}" data-fin="${acc}"><span>${t}</span><span>${f(d)}–${f(acc)}</span></a></li>`}).join("");
+let seg=0,tick=null;const reloj=document.getElementById("reloj"),barra=document.getElementById("barra"),bt=document.getElementById("t-play");
+function pintar(){const m=Math.floor(seg/60),s=seg%60;reloj.innerHTML=`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")} <small>/ 150:00</small>`;
+  barra.style.width=Math.min(100,seg/90)+"%";const min=seg/60;
+  ul.querySelectorAll("a").forEach(a=>{const i=+a.dataset.ini,f=+a.dataset.fin;a.classList.toggle("activo",seg>0&&min>=i&&min<f);a.classList.toggle("hecho",min>=f);});}
+bt.onclick=()=>{if(tick){clearInterval(tick);tick=null;bt.innerHTML='<i class="fa-solid fa-play"></i> Seguir';}else{tick=setInterval(()=>{seg++;pintar();},1000);bt.innerHTML='<i class="fa-solid fa-pause"></i> Pausar';}};
+document.getElementById("t-reset").onclick=()=>{clearInterval(tick);tick=null;seg=0;bt.innerHTML='<i class="fa-solid fa-play"></i> Iniciar';pintar();};
+pintar();
+
+window.addEventListener("load",()=>{setTimeout(()=>{if(!window.pyRun&&window.brython){try{brython({debug:0})}catch(e){}}
+  const chk=setInterval(()=>{if(window.pyRun){clearInterval(chk);marcarListo();}},150);},50);});
+})();
+</script>
+</body>
+</html>
